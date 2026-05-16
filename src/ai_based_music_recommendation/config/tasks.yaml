@@ -1,0 +1,82 @@
+analyze_song_task:
+  description: >
+    Use the song_lookup tool to find "{song_title}" by "{artist}" in the dataset.
+    Pass both song_title="{song_title}" and artist="{artist}" to the tool.
+
+    From the returned data produce a structured musical profile including:
+    1. Exact values for all 9 audio features (danceability, energy, loudness,
+       speechiness, acousticness, instrumentalness, liveness, valence, tempo)
+    2. The song's dataset genre and popularity score
+    3. A plain-language interpretation of each key feature
+       (e.g. "energy=0.87 → loud, fast, intense track")
+    4. A one-paragraph summary of what makes this song sonically distinctive
+
+    IMPORTANT: if the tool returns an error, report it exactly as returned.
+    Do NOT invent or estimate any audio features.
+  expected_output: >
+    A structured musical profile of "{song_title}" by "{artist}" with all 9 numerical
+    audio features, plain-language interpretations, and a summary paragraph.
+    If the song was not found, output only the error message from the tool.
+  agent: song_analyzer
+
+research_similar_songs_task:
+  description: >
+    Using the musical profile of "{song_title}" by "{artist}" from the previous task,
+    find the most similar songs.
+
+    Call similar_song_search with song_title="{song_title}" and artist="{artist}"
+    and top_n=5.
+    Record each result: track_name, artists, genre, popularity, similarity_score.
+    Present all 5 results sorted by similarity_score descending.
+
+    Do not invent songs or genres — use only what the tool returns.
+  expected_output: >
+    A ranked list of 5 similar songs, each with: track name, artist(s),
+    genre, popularity, and similarity score. Sorted most to least similar.
+  agent: music_researcher
+  context:
+    - analyze_song_task
+
+explain_and_recommend_task:
+  description: >
+    Call the shap_analyze_recommendations tool exactly once with
+    song_title="{song_title}" and artist="{artist}". The tool returns the SHAP +
+    XGBoost evidence for the 5 recommended songs: for each song, its XGBoost-predicted
+    genre, the audio-feature cosine similarity, and the top shared audio features
+    (with values and SHAP impact).
+
+    Using ONLY that evidence, write a Markdown report. Do NOT call any other tool.
+    Do NOT output JSON or raw tool data — write human-readable English.
+
+    Start the report with this line:
+    ## Music Recommendations for {song_title} by {artist}
+
+    Then add one intro sentence about the input song's predicted genre and sound.
+
+    Then, for EACH "SONG" block returned by the tool, output exactly three things in order:
+    1. The block's HEADING line, copied EXACTLY (it already looks like "### 1. ...").
+    2. The block's GENRE LINE, copied EXACTLY (it already looks like "Genre: ... | Similarity: ...").
+    3. One short paragraph explaining why this song was recommended, using the EVIDENCE:
+       name the XGBoost-predicted genre, the top 2 shared audio features with both
+       values, and the cosine similarity.
+
+    Do NOT invent song names, artists, genres, or numbers — copy the HEADING and GENRE
+    LINE straight from the tool output, and take every number from the EVIDENCE. Never
+    leave placeholders like "track name" or "Artist" in your answer.
+
+    Example of one finished entry:
+    ### 1. "Save Your Tears" by The Weeknd
+    Genre: r&b | Similarity: 0.97
+    Both tracks are classified as r&b by the XGBoost model and share high energy
+    (0.73 vs 0.71) and upbeat valence (0.62 vs 0.65), giving a cosine similarity of 0.97.
+  expected_output: >
+    A Markdown report titled "## Music Recommendations for {song_title} by {artist}"
+    with 5 numbered song entries. Each entry has a ### heading with track name and
+    artist, a genre/similarity line, and one plain-English paragraph grounded in the
+    XGBoost genre prediction, the SHAP shared features, and the cosine similarity.
+    No JSON, no raw tool data.
+  agent: explainability_agent
+  context:
+    - research_similar_songs_task
+  output_file: output/recommendations.md
+  markdown: true
