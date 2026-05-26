@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* backgrounds — warm obsidian */
+  --color-bg-base:    #070503;
+  --color-bg-surface: #0D0A06;
+  --color-bg-raised:  #15100A;
+
+  /* borders */
+  --color-border: #2E2318;
+
+  /* accents — copper primary, electric teal secondary */
+  --color-accent:       #D4692A;
+  --color-accent-light: #E8844A;
+  --color-cyan:         #10C5A8;
+  --color-cyan-soft:    #0DA08A;
+
+  /* status */
+  --color-success: #52B87A;
+  --color-amber:   #E8A832;
+
+  /* text — warm cream scale */
+  --color-text-primary:   #EDE0C8;
+  --color-text-secondary: #8C7862;
+  --color-text-muted:     #4A3C2C;
+
+  /* badge */
+  --color-badge-bg: #180E08;
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+
+  html, body, #root { height: 100%; }
+
+  body {
+    margin: 0;
+    background-color: var(--color-bg-base);
+    color: var(--color-text-primary);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-bg-surface); }
+  ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
+}
+
+@layer utilities {
+  .gradient-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    background: linear-gradient(135deg, #D4692A 0%, #10C5A8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .card-glow {
+    box-shadow: 0 0 0 1px var(--color-border),
+                0 4px 24px rgba(212, 105, 42, 0.08);
+  }
+
+  .card-glow-hover {
+    box-shadow: 0 0 0 1px var(--color-accent),
+                0 8px 32px rgba(212, 105, 42, 0.22);
+  }
+}
