@@ -23,19 +23,26 @@ $start = (git rev-parse --abbrev-ref HEAD).Trim()
 if ($start -eq 'HEAD') { throw 'Detached HEAD - check out a branch (e.g. main) first.' }
 if (git status --porcelain) { throw 'Working tree is not clean - commit or stash changes first.' }
 
-# Clean up any leftover temp branch from a previous interrupted run.
-git branch -D hf-temp 2>$null | Out-Null
+# Delete the temp branch only if it exists (avoids git writing to stderr, which
+# PowerShell 5.1 would otherwise turn into a terminating error).
+function Remove-TempBranch {
+    git show-ref --verify --quiet refs/heads/hf-temp
+    if ($LASTEXITCODE -eq 0) { git branch -D hf-temp | Out-Null }
+}
+
+Remove-TempBranch
 
 Write-Host "Building a clean deploy snapshot from '$start'..." -ForegroundColor Cyan
 try {
     # An orphan branch is a single commit with no history, so the large CSVs in
     # this repo's past commits are never referenced and never uploaded to HF.
     git checkout --orphan hf-temp | Out-Null
-    git rm -r --cached --quiet data/datasets data/training_dataset.parquet
-    git commit -q -m "Deploy LLMusic ($(Get-Date -Format 'yyyy-MM-dd HH:mm'))"
+    git rm -r --cached --quiet data/datasets data/training_dataset.parquet | Out-Null
+    git commit -q -m "Deploy LLMusic ($(Get-Date -Format 'yyyy-MM-dd HH:mm'))" | Out-Null
 
     Write-Host 'Pushing to Hugging Face (hf -> main)...' -ForegroundColor Cyan
     git push hf hf-temp:main --force
+    if ($LASTEXITCODE -ne 0) { throw 'git push failed - see output above.' }
 
     Write-Host 'Pushed. The Space will rebuild automatically:' -ForegroundColor Green
     Write-Host '  https://huggingface.co/spaces/aynez/llmusic'
@@ -43,5 +50,5 @@ try {
 finally {
     # Always return to the original branch and remove the temp branch.
     git checkout -f $start | Out-Null
-    git branch -D hf-temp 2>$null | Out-Null
+    Remove-TempBranch
 }
