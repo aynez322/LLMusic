@@ -11,11 +11,15 @@ import { ErrorBanner } from './components/ui/ErrorBanner'
 import { useSongLookup } from './hooks/useSongLookup'
 import { useSimilarSongs } from './hooks/useSimilarSongs'
 import { useRecommendStream } from './hooks/useRecommendStream'
+import { useTheme } from './hooks/useTheme'
 import { extractExplanations } from './utils/featureLabels'
 import { TopTracksCarousel } from './components/home/TopTracksCarousel'
+import { HowItWorks } from './components/home/HowItWorks'
 import { StreamingLinksPanel } from './components/pipeline/StreamingLinksPanel'
+import { ThemeToggle } from './components/ui/ThemeToggle'
 
 export default function App() {
+  const { theme, toggle: toggleTheme } = useTheme()
   const lookupHook = useSongLookup()
   const similarHook = useSimilarSongs()
   const streamHook = useRecommendStream()
@@ -51,7 +55,7 @@ export default function App() {
   }
 
   return (
-    <AppShell>
+    <AppShell themeToggle={<ThemeToggle theme={theme} onToggle={toggleTheme} />}>
 
       {/* ── Hero (idle, no error) ────────────────────────── */}
       <AnimatePresence>
@@ -107,7 +111,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* ── Top Tracks Carousel (idle, no error) ─────────── */}
+      {/* ── Top Tracks Carousel + How It Works (idle, no error) ── */}
       <AnimatePresence>
         {!hasResults && !isLoading && !hasError && (
           <motion.div
@@ -118,6 +122,7 @@ export default function App() {
             transition={{ duration: 0.4, delay: 0.1 }}
           >
             <TopTracksCarousel onSelect={handleSubmit} />
+            <HowItWorks />
           </motion.div>
         )}
       </AnimatePresence>

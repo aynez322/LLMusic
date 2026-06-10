@@ -30,6 +30,28 @@
   --color-badge-bg: #180E08;
 }
 
+[data-theme="light"] {
+  --color-bg-base:    #F7F3EE;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-raised:  #EDE8E2;
+
+  --color-border: #DDD5CB;
+
+  --color-accent:       #C85E22;
+  --color-accent-light: #E07540;
+  --color-cyan:         #0B9E8B;
+  --color-cyan-soft:    #0A8A7A;
+
+  --color-success: #3EA868;
+  --color-amber:   #CC8F10;
+
+  --color-text-primary:   #1A1208;
+  --color-text-secondary: #6B5040;
+  --color-text-muted:     #A8907A;
+
+  --color-badge-bg: #FDF5EE;
+}
+
 @layer base {
   * { box-sizing: border-box; }
 
@@ -42,6 +64,7 @@
     font-family: 'DM Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.25s ease, color 0.2s ease;
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
