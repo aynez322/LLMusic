@@ -1,7 +1,7 @@
 ---
 title: LLMusic
 emoji: 🎵
-colorFrom: orange
+colorFrom: red
 colorTo: indigo
 sdk: docker
 app_port: 7860
