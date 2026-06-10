@@ -1,0 +1,27 @@
+# ── Build-only data (NOT loaded at runtime — keeps the image small) ──
+data/datasets/
+data/genre_classifier.pkl
+data/training_dataset.parquet
+
+# Frontend is deployed separately as a static site
+frontend/
+
+# Dataset-building scripts (not used by the API)
+scripts/
+
+# Python / venv / caches
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets & VCS & misc
+.env
+.git/
+.gitignore
+.claude/
+output/
+*.png
+*.md

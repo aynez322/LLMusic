@@ -1,0 +1,39 @@
+# Render Blueprint — deploys the backend (Docker) + frontend (static site).
+# Docs: https://render.com/docs/blueprint-spec
+#
+# After the FIRST deploy you must fill in two cross-URLs in the dashboard
+# (both are marked `sync: false` below):
+#   1. music-rec-api  → FRONTEND_ORIGIN = https://<your music-rec-web URL>
+#   2. music-rec-web  → VITE_API_BASE   = https://<your music-rec-api URL>/api
+# Then trigger a redeploy of each so the values take effect.
+
+services:
+  # ── Backend: FastAPI + CrewAI ─────────────────────────────────────
+  - type: web
+    name: music-rec-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter            # 'free' spins down on idle & can't sustain long SSE streams
+    region: frankfurt        # pick the region closest to you
+    healthCheckPath: /api/health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false          # set in dashboard (secret)
+      - key: LASTFM_API_KEY
+        sync: false          # set in dashboard (secret)
+      - key: FRONTEND_ORIGIN
+        sync: false          # set to the static site URL (enables CORS)
+
+  # ── Frontend: Vite static build ──────────────────────────────────
+  - type: web
+    name: music-rec-web
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_BASE
+        sync: false          # set to https://<music-rec-api URL>/api, then redeploy
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

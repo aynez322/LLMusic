@@ -1,6 +1,8 @@
 import type { Recommendation, Song, SSEEvent } from '../types/music'
 
-const BASE = '/api'
+// In dev, '/api' is proxied to the backend by Vite (see vite.config.ts).
+// In production, set VITE_API_BASE to the backend origin, e.g. https://music-rec-api.onrender.com/api
+const BASE = import.meta.env.VITE_API_BASE ?? '/api'
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
