@@ -1,13 +1,3 @@
----
-title: LLMusic
-emoji: 🎵
-colorFrom: red
-colorTo: indigo
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # LLMusic — AI-Based Music Recommendation
 
 > Type a song. Three AI agents figure out why you like it and what to listen to next.
