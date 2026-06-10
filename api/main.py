@@ -291,3 +291,16 @@ async def recommend(req: SongRequest):
         yield _event({"type": "done"})
 
     return EventSourceResponse(event_stream())
+
+
+# ── Serve the built frontend (single-origin production deploy) ────────
+# In production (Docker / Hugging Face Spaces) the React app is built into
+# frontend/dist and served by this same server, so the UI and /api share one
+# origin — no CORS needed. This dir does not exist in local dev, so the block
+# is skipped; run the frontend with `npm run dev` instead. Mounted last so the
+# /api/* routes above always take precedence.
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+
+_FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+if os.path.isdir(_FRONTEND_DIST):
+    app.mount("/", StaticFiles(directory=_FRONTEND_DIST, html=True), name="frontend")

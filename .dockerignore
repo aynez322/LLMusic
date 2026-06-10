@@ -1,13 +1,15 @@
-# ── Build-only data (NOT loaded at runtime — keeps the image small) ──
+# ── Build-only data (NOT loaded at runtime) ──────────────────────────
+# Runtime needs only: merged_dataset.parquet, genre_fingerprints,
+# genre_classifier.pkl. Everything below is excluded to keep the image lean.
 data/datasets/
-data/genre_classifier.pkl
 data/training_dataset.parquet
-
-# Frontend is deployed separately as a static site
-frontend/
 
 # Dataset-building scripts (not used by the API)
 scripts/
+
+# Node deps / prior frontend build (rebuilt fresh in stage 1)
+**/node_modules/
+frontend/dist/
 
 # Python / venv / caches
 .venv/
@@ -17,11 +19,9 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
-# Secrets & VCS & misc
+# Secrets, VCS, IDE, misc
 .env
 .git/
-.gitignore
 .claude/
 output/
 *.png
-*.md
