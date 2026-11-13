@@ -1,6 +1,6 @@
-# LLMusic — Music Recommendations That Show Their Work
+# LLMusic — Listeners Like Me
 
-> Type a song. LLMusic finds what its listeners also play, listens to every candidate, and tells you why each one fits.
+> Type a song. LLMusic finds what people who love it also play, listens to every candidate, and tells you why each one fits.
 
 **[Try it live →](https://huggingface.co/spaces/aynez/llmusic)**
 
@@ -100,6 +100,8 @@ The topic wasn't random. I'm a music enthusiast and I've always spent a lot of t
 So I wrapped the original pipeline in a FastAPI backend and built a full React frontend on top. The terminal output became a live streaming UI where you can watch each agent run.
 
 **Version 2** rebuilt the engine. The first version compared nine Spotify audio statistics (energy, tempo, …) from a fixed Kaggle dataset. That meant new songs were missing, and the matches often didn't *sound* alike. Spotify has also stopped offering those features to new apps. Now recommendations start from what real listeners play together, and an audio model listens to the actual music to decide which candidates fit.
+
+That also changed what the name means. Version 1 was built around a large language model, hence the "LLM". Version 2 doesn't use one, so the letters now stand for **Listeners Like Me**: the best recommendations come from people whose taste overlaps with yours.
 
 ---
 

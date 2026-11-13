@@ -68,7 +68,10 @@ export default function App() {
                 className="w-9 h-9 select-none"
                 style={{ boxShadow: '0 4px 20px rgba(212,105,42,0.45)', borderRadius: '7px' }}
               />
-              <span className="font-display text-text-secondary text-xl tracking-wide">LLMusic</span>
+              <div className="text-left leading-none">
+                <span className="font-display text-text-secondary text-xl tracking-wide">LLMusic</span>
+                <p className="text-text-muted text-[10px] uppercase tracking-[0.2em] mt-1">Listeners Like Me</p>
+              </div>
             </div>
 
             <h1 className="gradient-text text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
