@@ -1,28 +1,15 @@
 import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useTopTracks, type TopTrack } from '../../hooks/useTopTracks'
+import { useTopTracks } from '../../hooks/useTopTracks'
+import type { Track } from '../../types/music'
 
 interface TopTracksCarouselProps {
-  onSelect: (title: string, artist: string) => void
-}
-
-function PopBar({ value }: { value: number }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex-1 h-1 rounded-full bg-bg-raised overflow-hidden">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-accent to-cyan"
-          style={{ width: `${value}%` }}
-        />
-      </div>
-      <span className="text-text-muted text-[10px] tabular-nums w-5 text-right">{value}</span>
-    </div>
-  )
+  onSelect: (track: Track) => void
 }
 
 /* ── individual card ──────────────────────────────────────────── */
 function TrackCard({ track, index, onClick }: {
-  track: TopTrack
+  track: Track
   index: number
   onClick: () => void
 }) {
@@ -51,10 +38,15 @@ function TrackCard({ track, index, onClick }: {
       {/* copper accent line on hover */}
       <div className="absolute inset-x-0 top-0 h-[2px] rounded-t-2xl bg-gradient-to-r from-accent to-cyan opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
 
-      {/* rank */}
-      <p className="gradient-text text-3xl font-bold leading-none mb-3 select-none">
-        {String(track.rank).padStart(2, '0')}
-      </p>
+      {/* cover + position */}
+      <div className="relative mb-3">
+        {track.cover
+          ? <img src={track.cover} alt="" loading="lazy" className="w-full aspect-square rounded-xl object-cover" />
+          : <div className="w-full aspect-square rounded-xl bg-bg-raised" />}
+        <span className="absolute bottom-1.5 left-1.5 px-1.5 rounded-md bg-black/60 text-white text-[10px] font-bold tabular-nums">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+      </div>
 
       {/* title */}
       <p className="font-display text-text-primary text-[13px] font-semibold leading-snug line-clamp-2 mb-1 group-hover:text-accent transition-colors duration-200">
@@ -62,12 +54,9 @@ function TrackCard({ track, index, onClick }: {
       </p>
 
       {/* artist */}
-      <p className="text-text-muted text-[10px] truncate mb-4">
+      <p className="text-text-muted text-[10px] truncate">
         {track.artist}
       </p>
-
-      {/* popularity bar */}
-      <PopBar value={track.popularity} />
     </motion.button>
   )
 }
@@ -84,7 +73,7 @@ function Skeleton() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex-shrink-0 w-40 h-36 bg-bg-surface rounded-2xl animate-pulse"
+            className="flex-shrink-0 w-40 h-60 bg-bg-surface rounded-2xl animate-pulse"
             style={{ animationDelay: `${i * 80}ms` }}
           />
         ))}
@@ -138,7 +127,7 @@ export function TopTracksCarousel({ onSelect }: TopTracksCarouselProps) {
       {/* header */}
       <div className="flex items-baseline justify-between mb-4 px-1">
         <h2 className="font-display text-text-secondary text-sm tracking-[0.12em] uppercase">
-          Popular in Dataset
+          Trending now
         </h2>
         <span className="text-text-muted text-[10px] tracking-wide">click any to explore</span>
       </div>
@@ -176,10 +165,10 @@ export function TopTracksCarousel({ onSelect }: TopTracksCarouselProps) {
         >
           {tracks.map((track, i) => (
             <TrackCard
-              key={`${track.rank}-${track.title}`}
+              key={track.deezer_id}
               track={track}
               index={i}
-              onClick={() => onSelect(track.title, track.artist)}
+              onClick={() => onSelect(track)}
             />
           ))}
         </div>

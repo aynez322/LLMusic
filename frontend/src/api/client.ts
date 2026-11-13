@@ -1,42 +1,39 @@
-import type { Recommendation, Song, SSEEvent } from '../types/music'
+import type { RecommendParams, SSEEvent, Track } from '../types/music'
 
 // In dev, '/api' is proxied to the backend by Vite (see vite.config.ts).
-// In production, set VITE_API_BASE to the backend origin, e.g. https://music-rec-api.onrender.com/api
+// In production the backend serves the frontend, so the same relative path works.
 const BASE = import.meta.env.VITE_API_BASE ?? '/api'
 
-async function handleResponse<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const detail = await res.json().catch(() => ({ error: res.statusText }))
-    throw detail
-  }
+async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { signal })
+  if (!res.ok) throw new Error(res.statusText)
   return res.json()
 }
 
-export async function lookupSong(songTitle: string, artist: string): Promise<Song> {
-  const res = await fetch(`${BASE}/lookup`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ song_title: songTitle, artist }),
-  })
-  return handleResponse<Song>(res)
+export function searchTracks(query: string, signal?: AbortSignal): Promise<Track[]> {
+  return getJson(`/search?q=${encodeURIComponent(query)}&limit=6`, signal)
 }
 
-export async function findSimilar(
-  songTitle: string,
-  artist: string,
-  topN = 5,
-): Promise<Recommendation[]> {
-  const res = await fetch(`${BASE}/similar`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ song_title: songTitle, artist, top_n: topN }),
-  })
-  return handleResponse<Recommendation[]>(res)
+export function chartTracks(limit = 20): Promise<Track[]> {
+  return getJson(`/chart?limit=${limit}`)
+}
+
+export interface TrackInfo {
+  title: string
+  artist: string
+  listeners: number
+  playcount: number
+  tags: string[]
+  summary: string
+  lastfm_url: string
+}
+
+export function trackInfo(title: string, artist: string): Promise<TrackInfo> {
+  return getJson(`/track-info?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}`)
 }
 
 export function streamRecommendations(
-  songTitle: string,
-  artist: string,
+  params: RecommendParams,
   onEvent: (event: SSEEvent) => void,
   onError: (err: Error) => void,
 ): () => void {
@@ -45,14 +42,16 @@ export function streamRecommendations(
   fetch(`${BASE}/recommend`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ song_title: songTitle, artist }),
+    body: JSON.stringify({
+      deezer_id: params.deezerId ?? null,
+      title: params.title ?? '',
+      artist: params.artist ?? '',
+      discovery: params.discovery,
+    }),
     signal: controller.signal,
   })
     .then(async (res) => {
-      if (!res.ok || !res.body) {
-        const detail = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(detail.message ?? 'Stream failed')
-      }
+      if (!res.ok || !res.body) throw new Error(`Request failed (${res.status})`)
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -63,17 +62,15 @@ export function streamRecommendations(
         if (done) break
 
         buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
+        const lines = buffer.split(/\r?\n/)
         buffer = lines.pop() ?? ''
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const event: SSEEvent = JSON.parse(line.slice(6))
-              onEvent(event)
-            } catch {
-              // malformed line — skip
-            }
+          if (!line.startsWith('data:')) continue
+          try {
+            onEvent(JSON.parse(line.slice(5).trim()))
+          } catch {
+            // malformed line — skip
           }
         }
       }

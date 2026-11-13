@@ -1,37 +1,26 @@
-import { useEffect, useRef, useState } from 'react'
-
-export interface SuggestItem {
-  title: string
-  artist: string
-}
+import { useEffect, useState } from 'react'
+import { searchTracks } from '../api/client'
+import type { Track } from '../types/music'
 
 export function useSearchSuggestions(query: string) {
-  const [items, setItems]     = useState<SuggestItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [items, setItems] = useState<Track[]>([])
+  const active = query.trim().length >= 2
 
   useEffect(() => {
-    if (timer.current) clearTimeout(timer.current)
+    if (!active) return
 
-    if (query.trim().length < 2) {
-      setItems([])
-      return
+    const controller = new AbortController()
+    const timer = setTimeout(() => {
+      searchTracks(query, controller.signal)
+        .then(setItems)
+        .catch(() => { if (!controller.signal.aborted) setItems([]) })
+    }, 250)
+
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
     }
+  }, [query, active])
 
-    setLoading(true)
-    timer.current = setTimeout(async () => {
-      try {
-        const r = await fetch(`/api/suggest?q=${encodeURIComponent(query)}&limit=5`)
-        if (r.ok) setItems(await r.json())
-      } catch {
-        setItems([])
-      } finally {
-        setLoading(false)
-      }
-    }, 320)
-
-    return () => { if (timer.current) clearTimeout(timer.current) }
-  }, [query])
-
-  return { items, loading }
+  return { items: active ? items : [] }
 }

@@ -3,7 +3,26 @@ import { useState } from 'react'
 interface StreamingLinksProps {
   title: string
   artist: string
+  /** Direct link to the exact track on Deezer, when known. */
+  deezerLink?: string
   size?: 'sm' | 'md'
+}
+
+const DEEZER = {
+  key: 'deezer',
+  label: 'Deezer',
+  brand: '#A238FF',
+  url: () => '',
+  Icon: () => (
+    <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" aria-hidden>
+      <rect x="1" y="16" width="4.5" height="3" rx="0.5" />
+      <rect x="6.6" y="16" width="4.5" height="3" rx="0.5" /><rect x="6.6" y="12" width="4.5" height="3" rx="0.5" />
+      <rect x="12.2" y="16" width="4.5" height="3" rx="0.5" /><rect x="12.2" y="12" width="4.5" height="3" rx="0.5" />
+      <rect x="12.2" y="8" width="4.5" height="3" rx="0.5" />
+      <rect x="17.8" y="16" width="4.5" height="3" rx="0.5" /><rect x="17.8" y="12" width="4.5" height="3" rx="0.5" />
+      <rect x="17.8" y="8" width="4.5" height="3" rx="0.5" /><rect x="17.8" y="4" width="4.5" height="3" rx="0.5" />
+    </svg>
+  ),
 }
 
 const PLATFORMS = [
@@ -46,10 +65,9 @@ const PLATFORMS = [
 ]
 
 function PlatformLink({
-  title, artist, platform, compact,
+  href, platform, compact,
 }: {
-  title: string
-  artist: string
+  href: string
   platform: typeof PLATFORMS[number]
   compact: boolean
 }) {
@@ -57,7 +75,7 @@ function PlatformLink({
 
   return (
     <a
-      href={platform.url(title, artist)}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       onMouseEnter={() => setHovered(true)}
@@ -80,20 +98,15 @@ function PlatformLink({
   )
 }
 
-export function StreamingLinks({ title, artist, size = 'md' }: StreamingLinksProps) {
+export function StreamingLinks({ title, artist, deezerLink, size = 'md' }: StreamingLinksProps) {
   if (!title || !artist) return null
   const compact = size === 'sm'
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
+    <div className="flex items-center gap-1.5 flex-wrap" onClick={e => e.stopPropagation()}>
+      {deezerLink && <PlatformLink href={deezerLink} platform={DEEZER} compact={compact} />}
       {PLATFORMS.map(p => (
-        <PlatformLink
-          key={p.key}
-          title={title}
-          artist={artist}
-          platform={p}
-          compact={compact}
-        />
+        <PlatformLink key={p.key} href={p.url(title, artist)} platform={p} compact={compact} />
       ))}
     </div>
   )

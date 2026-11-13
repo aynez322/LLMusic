@@ -1,73 +1,85 @@
 import { useRef, useState } from 'react'
 import { streamRecommendations } from '../api/client'
-import type { AgentId, AgentState } from '../types/music'
+import type { Recommendation, RecommendParams, StageId, StageState, Track } from '../types/music'
 
-const INITIAL_AGENTS: AgentState[] = [
-  { id: 'song_analyzer',        label: 'Song Analyzer',        status: 'idle' },
-  { id: 'music_researcher',     label: 'Music Researcher',     status: 'idle' },
-  { id: 'explainability_agent', label: 'Explainability Agent', status: 'idle' },
+const INITIAL_STAGES: StageState[] = [
+  { id: 'resolve',    label: 'Finding your song',              status: 'idle', detail: '' },
+  { id: 'candidates', label: 'Gathering what listeners pair it with', status: 'idle', detail: '' },
+  { id: 'listening',  label: 'Listening to previews',          status: 'idle', detail: '' },
+  { id: 'ranking',    label: 'Ranking & explaining',           status: 'idle', detail: '' },
 ]
 
 export function useRecommendStream() {
-  const [agents, setAgents]     = useState<AgentState[]>(INITIAL_AGENTS)
-  const [markdown, setMarkdown] = useState<string | null>(null)
-  const [streaming, setStreaming] = useState(false)
-  const [error, setError]       = useState<string | null>(null)
+  const [stages, setStages]           = useState<StageState[]>(INITIAL_STAGES)
+  const [seed, setSeed]               = useState<Track | null>(null)
+  const [results, setResults]         = useState<Recommendation[] | null>(null)
+  const [error, setError]             = useState<string | null>(null)
+  const [suggestions, setSuggestions] = useState<Track[]>([])
+  const [running, setRunning]         = useState(false)
   const stopRef = useRef<(() => void) | null>(null)
 
-  function setAgentStatus(id: AgentId, status: AgentState['status']) {
-    setAgents((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)))
+  function setStage(id: StageId, patch: Partial<StageState>) {
+    setStages(prev => prev.map(s => (s.id === id ? { ...s, ...patch } : s)))
   }
 
-  function start(title: string, artist: string) {
-    setStreaming(true)
-    setMarkdown(null)
-    setError(null)
-    setAgents(INITIAL_AGENTS)
+  function failRunningStage() {
+    setStages(prev => prev.map(s => (s.status === 'running' ? { ...s, status: 'error' } : s)))
+  }
 
-    const stop = streamRecommendations(
-      title,
-      artist,
+  function start(params: RecommendParams) {
+    stopRef.current?.()
+    setStages(INITIAL_STAGES)
+    setSeed(null)
+    setResults(null)
+    setError(null)
+    setSuggestions([])
+    setRunning(true)
+
+    stopRef.current = streamRecommendations(
+      params,
       (event) => {
         switch (event.type) {
-          case 'agent_start':
-            if (event.agent) setAgentStatus(event.agent, 'running')
+          case 'stage':
+            setStage(event.stage, {
+              status: event.status === 'start' ? 'running' : 'done',
+              detail: event.detail,
+            })
             break
-          case 'agent_done':
-            if (event.agent) setAgentStatus(event.agent, 'done')
+          case 'seed':
+            setSeed(event.track)
             break
-          case 'result':
-            if (event.data) setMarkdown(event.data)
+          case 'results':
+            setResults(event.items)
             break
           case 'error':
-            setError(event.message ?? 'Pipeline error')
-            setStreaming(false)
+            failRunningStage()
+            setError(event.message)
+            setSuggestions(event.suggestions ?? [])
+            setRunning(false)
             break
           case 'done':
-            setStreaming(false)
+            setRunning(false)
             break
         }
       },
       (err) => {
+        failRunningStage()
         setError(err.message)
-        setStreaming(false)
+        setRunning(false)
       },
     )
-
-    stopRef.current = stop
-  }
-
-  function stop() {
-    stopRef.current?.()
-    setStreaming(false)
   }
 
   function reset() {
-    stop()
-    setAgents(INITIAL_AGENTS)
-    setMarkdown(null)
+    stopRef.current?.()
+    stopRef.current = null
+    setStages(INITIAL_STAGES)
+    setSeed(null)
+    setResults(null)
     setError(null)
+    setSuggestions([])
+    setRunning(false)
   }
 
-  return { agents, markdown, streaming, error, start, stop, reset }
+  return { stages, seed, results, error, suggestions, running, start, reset }
 }
