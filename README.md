@@ -1,4 +1,4 @@
-# LLMusic — Listeners Like Me
+# Listeners Like Me
 
 > Type a song. LLMusic finds what people who love it also play, listens to every candidate, and tells you why each one fits.
 
