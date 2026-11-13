@@ -69,8 +69,7 @@ export default function App() {
                 style={{ boxShadow: '0 4px 20px rgba(212,105,42,0.45)', borderRadius: '7px' }}
               />
               <div className="text-left leading-none">
-                <span className="font-display text-text-secondary text-xl tracking-wide">LLMusic</span>
-                <p className="text-text-muted text-[10px] uppercase tracking-[0.2em] mt-1">Listeners Like Me</p>
+                <span className="font-display text-text-secondary text-xl tracking-wide">Listeners Like Me</span>
               </div>
             </div>
 
