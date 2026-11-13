@@ -1,23 +1,29 @@
-# LLMusic — AI-Based Music Recommendation
+# LLMusic — Music Recommendations That Show Their Work
 
-> Type a song. Three AI agents figure out why you like it and what to listen to next.
+> Type a song. LLMusic finds what its listeners also play, listens to every candidate, and tells you why each one fits.
+
+**[Try it live →](https://huggingface.co/spaces/aynez/llmusic)**
 
 ---
 
 ![LLMusic home page screenshot](docs/screenshot.png)
-<!-- replace with an actual screenshot once the app is running -->
 
 ---
 
 ## What it does
 
-LLMusic takes a song title and artist and runs them through a multi-agent pipeline that:
+You type a song and artist and pick the exact track from the suggestions. Then LLMusic:
 
-1. **Looks up the track** in a dataset of 114 000+ songs and reads its nine Spotify audio features — energy, danceability, valence, tempo, acousticness, and more.
-2. **Finds the five closest matches** using cosine similarity across those features.
-3. **Explains the recommendations** in plain English, backed by SHAP values and an XGBoost genre classifier — so you know *why* a song was suggested, not just *that* it was.
+1. **Follows the listeners.** It asks Last.fm which tracks people who play your song also play, and collects artists that Last.fm, ListenBrainz and Deezer consider related. This gives ~50 candidates based on real listening behaviour.
+2. **Listens to them.** It downloads each candidate's 30-second preview and runs it through [CLAP](https://huggingface.co/laion/clap-htsat-unfused), an audio AI model, to measure how close each song actually *sounds* to yours.
+3. **Ranks and explains.** Listener evidence and sound similarity are blended, at most one song per artist is kept, and a **Discovery** slider shifts the results between familiar hits and deep cuts. Every recommendation lists the evidence behind it:
+   - 👥 *Last.fm listeners of "Holocene" also play this*
+   - 🎧 *Both have: acoustic guitar, slow and calm*
+   - \# *Shared tags: indie folk, singer-songwriter*
 
-The result shows up progressively in the UI as each agent finishes, so you're never staring at a blank screen.
+Results stream into the UI stage by stage, and every result has a playable preview.
+
+Because songs are looked up live, **anything on Deezer works**, including releases from this week. Nothing depends on a static dataset.
 
 ---
 
@@ -25,41 +31,63 @@ The result shows up progressively in the UI as each agent finishes, so you're ne
 
 | Layer | Stack |
 |---|---|
-| AI pipeline | [CrewAI](https://github.com/crewaiinc/crewai) · Gemini 2.5 Flash · SHAP · XGBoost · scikit-learn |
-| Backend | Python · FastAPI · Server-Sent Events (SSE) · Last.fm API |
+| Recommendation | Last.fm + ListenBrainz co-listening data · CLAP audio embeddings (PyTorch, CPU) · Deezer previews |
+| Backend | Python · FastAPI · Server-Sent Events · httpx · on-disk cache |
 | Frontend | React 19 · TypeScript · Vite · Tailwind CSS · Framer Motion |
-| Data | Kaggle Spotify dataset (~114 k tracks, 9 audio features) |
+| Deploy | Docker · Hugging Face Spaces (free CPU tier) |
 
 ---
 
 ## Project structure
 
 ```
-src/ai_based_music_recommendation/   ← CrewAI agents, tools, config
-api/                                  ← FastAPI wrapper (SSE streaming)
-frontend/                             ← React + Vite UI
-data/                                 ← processed dataset
-scripts/                              ← dataset preparation
+api/
+  main.py            ← FastAPI routes (search, recommend via SSE, chart, track info)
+  recommender.py     ← the pipeline: candidates → audio → ranking → explanations
+  audio.py           ← CLAP model, preview decoding, embedding cache, sound descriptors
+  sources/           ← Deezer, Last.fm and ListenBrainz clients
+  descriptor_stats.json  ← reference stats so "Both have: piano" means more than typical
+frontend/            ← React + Vite UI
+scripts/             ← descriptor stats builder, Hugging Face deploy script
+tests/               ← unit tests for normalisation and ranking
 ```
 
 ---
 
 ## Running locally
 
-**Backend**
-```bash
-# from project root, with the virtualenv active
-uvicorn api.main:app --reload --port 8000
+Create a `.env` file in the project root with a free [Last.fm API key](https://www.last.fm/api/account/create):
+
+```
+LASTFM_API_KEY=your_key_here
 ```
 
-**Frontend**
+**Backend** (Python 3.10–3.13, uses [uv](https://docs.astral.sh/uv/)):
+```bash
+uv sync
+uv run uvicorn api.main:app --reload --port 8000
+```
+The first start downloads the CLAP model (~600 MB).
+
+**Frontend:**
 ```bash
 cd frontend
 npm install
 npm run dev        # → http://localhost:5173
 ```
 
-A `.env` file with `GEMINI_API_KEY` and `LASTFM_API_KEY` is required in the project root.
+**Or with Docker** (UI and API on one port):
+```bash
+docker build -t llmusic .
+docker run -p 7860:7860 -e LASTFM_API_KEY=your_key_here llmusic   # → http://localhost:7860
+```
+
+**Tests:**
+```bash
+uv run pytest
+```
+
+Without a Last.fm key the app still works, using Deezer and ListenBrainz related artists only, but recommendations are noticeably weaker.
 
 ---
 
@@ -71,22 +99,21 @@ The topic wasn't random. I'm a music enthusiast and I've always spent a lot of t
 
 So I wrapped the original pipeline in a FastAPI backend and built a full React frontend on top. The terminal output became a live streaming UI where you can watch each agent run.
 
+**Version 2** rebuilt the engine. The first version compared nine Spotify audio statistics (energy, tempo, …) from a fixed Kaggle dataset. That meant new songs were missing, and the matches often didn't *sound* alike. Spotify has also stopped offering those features to new apps. Now recommendations start from what real listeners play together, and an audio model listens to the actual music to decide which candidates fit.
+
 ---
 
 ## What could be better
 
-A few honest things that would make this significantly stronger:
-
-- **Better audio features.** The current dataset describes music statistically (energy as a 0–1 float, tempo in BPM, etc). What's missing is features that describe how a song *actually sounds* — timbre, texture, instrument presence. That kind of data would make matches feel more natural to a human ear.
-
-- **User profiles.** Right now every search is stateless. A proper user layer — storing what people search for, what they skip, what they play — would let the system build a taste profile over time and weight recommendations accordingly.
-
-- **Feedback loop.** A simple thumbs up / thumbs down on each recommendation would be enough to start closing the gap between "statistically similar" and "actually what I wanted." Without that signal the system can't learn from its own mistakes.
+- **User profiles.** Every search is still stateless. Storing what people search for, play and skip would allow a taste profile that weights recommendations over time.
+- **Feedback loop.** A thumbs up / thumbs down on each recommendation would show which signals (listeners vs. sound) matter most, and let the weights be learned instead of hand-tuned.
+- **Evaluation.** The ranking weights were tuned by listening to the results. A held-out benchmark (e.g. ListenBrainz listening sessions) would make that measurable.
+- **Speed for brand-new searches.** Analysing ~50 previews takes around 40 seconds on a free 2-core CPU the first time a song is searched; repeat searches are instant thanks to the cache. A GPU or a pre-embedded catalog of popular songs would remove that wait.
 
 ---
 
 ## A note on the design
 
-Most music recommenders are black boxes — they tell you *what* to listen to but never *why*. The interesting part of this project is the third agent: it uses SHAP feature importance to generate a one-paragraph human explanation for each recommendation, grounded entirely in the audio data. No hallucination, no filler — just a direct answer to "what do these two songs actually have in common?"
+Most music recommenders are black boxes — they tell you *what* to listen to but never *why*. Every reason LLMusic shows comes from evidence it actually used: a co-listening signal, a measured sound similarity, or tags both songs share. Nothing is generated or guessed.
 
-The UI reflects that: agent steps animate in one by one so you can follow the reasoning as it happens, not just see the final answer.
+The sound descriptors ("acoustic guitar", "dark and moody") come from the same CLAP model, which understands both audio and text. A descriptor is only shown when *both* songs score clearly above typical music on it, measured against a genre-diverse reference set (`scripts/build_descriptor_stats.py`).
