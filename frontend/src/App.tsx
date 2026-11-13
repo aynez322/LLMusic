@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AppShell } from './components/layout/AppShell'
 import { SearchBar } from './components/search/SearchBar'
@@ -7,7 +7,8 @@ import { SeedCard } from './components/song/SeedCard'
 import { RecommendationList } from './components/recommendations/RecommendationList'
 import { StageProgress } from './components/pipeline/StageProgress'
 import { useRecommendStream } from './hooks/useRecommendStream'
-import { stopPreview } from './hooks/usePreviewPlayer'
+import { setPreviewQueue, stopPreview, usePlayer } from './hooks/usePreviewPlayer'
+import { MiniPlayer } from './components/player/MiniPlayer'
 import { useTheme } from './hooks/useTheme'
 import { TopTracksCarousel } from './components/home/TopTracksCarousel'
 import { HowItWorks } from './components/home/HowItWorks'
@@ -23,6 +24,13 @@ export default function App() {
   const [searchKey, setSearchKey]     = useState(0)
   const [discovery, setDiscovery]     = useState(0.5)
   const [lastQuery, setLastQuery]     = useState<{ title: string; artist: string } | null>(null)
+
+  const player = usePlayer()
+
+  // next/previous in the player walk the seed song, then the recommendations
+  useEffect(() => {
+    setPreviewQueue(stream.seed ? [stream.seed, ...(stream.results ?? []).map(r => r.track)] : [])
+  }, [stream.seed, stream.results])
 
   const started   = lastQuery !== null
   const notFound  = started && !stream.seed && !!stream.error
@@ -190,6 +198,10 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* room for the mini-player so it never covers the end of the page */}
+      {player.track && <div className="h-20" aria-hidden />}
+      <MiniPlayer />
 
     </AppShell>
   )

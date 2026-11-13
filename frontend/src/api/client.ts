@@ -4,6 +4,12 @@ import type { RecommendParams, SSEEvent, Track } from '../types/music'
 // In production the backend serves the frontend, so the same relative path works.
 const BASE = import.meta.env.VITE_API_BASE ?? '/api'
 
+/** Plays through the API, which redirects to a freshly signed Deezer URL: the
+ *  `preview` field in cached data expires ~15 minutes after it was fetched. */
+export function previewUrl(deezerId: number): string {
+  return `${BASE}/preview/${deezerId}`
+}
+
 async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { signal })
   if (!res.ok) throw new Error(res.statusText)

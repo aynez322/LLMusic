@@ -36,6 +36,11 @@ export default {
         display: ['"Playfair Display"', 'Georgia', 'serif'],
       },
       keyframes: {
+        // equalizer bar: grows from its base (pair with origin-bottom)
+        eq: {
+          '0%, 100%': { transform: 'scaleY(0.3)' },
+          '50%':      { transform: 'scaleY(1)' },
+        },
         'pulse-glow': {
           '0%, 100%': { opacity: '0.6' },
           '50%':      { opacity: '1' },
@@ -46,6 +51,7 @@ export default {
         },
       },
       animation: {
+        eq:           'eq 1s ease-in-out infinite',
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
         'bg-shift':   'bg-shift 8s ease infinite',
       },
