@@ -172,7 +172,8 @@ export function SearchBar({ onPick, onSubmit, discovery, onDiscoveryChange, load
             step={0.05}
             value={discovery}
             onChange={(e) => onDiscoveryChange(Number(e.target.value))}
-            className="flex-1 max-w-xs accent-[var(--color-accent)]"
+            className="range-slider flex-1 max-w-xs"
+            style={{ '--fill': `${discovery * 100}%` } as React.CSSProperties}
             aria-valuetext={discoveryLabel(discovery)}
           />
           <span className="text-xs text-text-secondary w-24">{discoveryLabel(discovery)}</span>
