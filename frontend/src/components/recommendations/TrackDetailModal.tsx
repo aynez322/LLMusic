@@ -224,14 +224,6 @@ export function TrackDetailModal({ recs, index, originIndex = null, onIndexChang
                         </div>
                       </div>
 
-                      {loading && (
-                        <div className="px-6 pb-4 space-y-2">
-                          {[72, 88, 54].map((w, i) => (
-                            <div key={i} className="h-2 bg-bg-raised rounded animate-pulse" style={{ width: `${w}%`, animationDelay: `${i * 90}ms` }} />
-                          ))}
-                        </div>
-                      )}
-
                       {!loading && info?.summary && (
                         <div className="px-6 pb-4">
                           <p className="text-text-secondary text-sm leading-relaxed">{info.summary}</p>
