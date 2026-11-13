@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI, HTTPException  # noqa: E402
+from fastapi.responses import RedirectResponse  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from sse_starlette.sse import EventSourceResponse  # noqa: E402
 
@@ -54,6 +55,16 @@ async def search(q: str, limit: int = 8):
 async def chart(limit: int = 20):
     """Current Deezer chart, shown on the home page as starting points."""
     return [t.model_dump() for t in await deezer.chart(limit=min(limit, 50))]
+
+
+@app.get("/api/preview/{deezer_id}")
+async def preview(deezer_id: int):
+    """Redirect to a freshly signed 30s preview. Preview URLs inside cached search/chart/
+    recommendation data expire after ~15 minutes, so the player always comes through here."""
+    url = await deezer.fresh_preview(deezer_id)
+    if not url:
+        raise HTTPException(status_code=404, detail={"error": "No preview for this track"})
+    return RedirectResponse(url, status_code=307, headers={"Cache-Control": "no-store"})
 
 
 @app.post("/api/recommend")
