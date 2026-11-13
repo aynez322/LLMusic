@@ -12,6 +12,11 @@ interface SearchBarProps {
   discovery: number
   onDiscoveryChange: (value: number) => void
   loading?: boolean
+  /** Prefill (e.g. a search restored from the URL). Read once, on mount. */
+  defaultTitle?: string
+  defaultArtist?: string
+  /** Shown when Discovery no longer matches the results on screen. */
+  onRerun?: () => void
 }
 
 function discoveryLabel(v: number): string {
@@ -20,9 +25,12 @@ function discoveryLabel(v: number): string {
   return 'Deep cuts'
 }
 
-export function SearchBar({ onPick, onSubmit, discovery, onDiscoveryChange, loading = false }: SearchBarProps) {
-  const [title, setTitle]   = useState('')
-  const [artist, setArtist] = useState('')
+export function SearchBar({
+  onPick, onSubmit, discovery, onDiscoveryChange, loading = false,
+  defaultTitle = '', defaultArtist = '', onRerun,
+}: SearchBarProps) {
+  const [title, setTitle]   = useState(defaultTitle)
+  const [artist, setArtist] = useState(defaultArtist)
   const [shake, setShake]   = useState(false)
   const [open, setOpen]     = useState(false)
   const [active, setActive] = useState(-1)
@@ -160,7 +168,7 @@ export function SearchBar({ onPick, onSubmit, discovery, onDiscoveryChange, load
         </div>
 
         {/* Discovery dial */}
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
           <label htmlFor="discovery" className="text-sm text-text-secondary font-medium whitespace-nowrap">
             Discovery
           </label>
@@ -177,6 +185,21 @@ export function SearchBar({ onPick, onSubmit, discovery, onDiscoveryChange, load
             aria-valuetext={discoveryLabel(discovery)}
           />
           <span className="text-sm text-text-primary w-24">{discoveryLabel(discovery)}</span>
+          <AnimatePresence>
+            {onRerun && (
+              <motion.button
+                type="button"
+                onClick={onRerun}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6, transition: { duration: 0.12 } }}
+                transition={{ duration: 0.18 }}
+                className="flex-shrink-0 px-3 py-1.5 rounded-lg border border-accent/60 text-accent hover:bg-accent/10 text-sm font-medium transition-colors"
+              >
+                Update results
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </form>
     </div>

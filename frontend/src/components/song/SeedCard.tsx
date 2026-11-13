@@ -1,9 +1,11 @@
+import { type ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import type { Track } from '../../types/music'
 import { CoverPlayButton } from '../ui/CoverPlayButton'
 import { StreamingLinks } from '../ui/StreamingLinks'
 
-export function SeedCard({ track }: { track: Track }) {
+/** `children` render under the song, e.g. the finished-search summary. */
+export function SeedCard({ track, children }: { track: Track; children?: ReactNode }) {
   return (
     <motion.div
       initial={{ y: 28, opacity: 0 }}
@@ -23,6 +25,7 @@ export function SeedCard({ track }: { track: Track }) {
           </div>
         </div>
       </div>
+      {children}
     </motion.div>
   )
 }

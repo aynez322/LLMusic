@@ -26,7 +26,8 @@ export function useRecommendStream() {
     setStages(prev => prev.map(s => (s.status === 'running' ? { ...s, status: 'error' } : s)))
   }
 
-  function start(params: RecommendParams) {
+  /** `onSeed` runs once the backend has resolved the exact seed track. */
+  function start(params: RecommendParams, opts: { onSeed?: (seed: Track) => void } = {}) {
     stopRef.current?.()
     setStages(INITIAL_STAGES)
     setSeed(null)
@@ -47,6 +48,7 @@ export function useRecommendStream() {
             break
           case 'seed':
             setSeed(event.track)
+            opts.onSeed?.(event.track)
             break
           case 'results':
             setResults(event.items)

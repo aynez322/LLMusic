@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AppShell } from './components/layout/AppShell'
+import { StickySeedBar } from './components/layout/StickySeedBar'
 import { SearchBar } from './components/search/SearchBar'
 import { SongNotFound } from './components/search/SongNotFound'
 import { SeedCard } from './components/song/SeedCard'
 import { RecommendationList } from './components/recommendations/RecommendationList'
-import { StageProgress } from './components/pipeline/StageProgress'
+import { StageProgress, StageSummary } from './components/pipeline/StageProgress'
 import { useRecommendStream } from './hooks/useRecommendStream'
 import { setPreviewQueue, stopPreview, usePlayer } from './hooks/usePreviewPlayer'
 import { MiniPlayer } from './components/player/MiniPlayer'
@@ -15,15 +16,34 @@ import { HowItWorks } from './components/home/HowItWorks'
 import { ThemeToggle } from './components/ui/ThemeToggle'
 import { ErrorBanner } from './components/ui/ErrorBanner'
 import { scrollBehavior } from './lib/media'
+import {
+  DEFAULT_DISCOVERY, pushHome, pushQuery, readQuery, replaceQuery, type SearchQuery,
+} from './lib/urlState'
 import type { Track } from './types/music'
+
+const APP_TITLE = 'Listeners Like Me'
+
+/** The search the results on screen came from. */
+interface ActiveQuery { title: string; artist: string; discovery: number }
+
+function toActive(q: SearchQuery): ActiveQuery {
+  return { title: q.title ?? '', artist: q.artist ?? '', discovery: q.discovery }
+}
 
 export default function App() {
   const { theme, toggle: toggleTheme } = useTheme()
   const stream = useRecommendStream()
 
-  const [searchKey, setSearchKey]     = useState(0)
-  const [discovery, setDiscovery]     = useState(0.5)
-  const [lastQuery, setLastQuery]     = useState<{ title: string; artist: string } | null>(null)
+  // a shared link or reload opens straight on its results, not on the home page
+  const [lastQuery, setLastQuery] = useState<ActiveQuery | null>(() => {
+    const q = readQuery()
+    return q ? toActive(q) : null
+  })
+  const [discovery, setDiscovery] = useState(() => readQuery()?.discovery ?? DEFAULT_DISCOVERY)
+  const [searchKey, setSearchKey] = useState(0)
+  const [formDefaults, setFormDefaults] = useState({ title: '', artist: '' })
+  const [searchOutOfView, setSearchOutOfView] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   const player = usePlayer()
 
@@ -32,34 +52,109 @@ export default function App() {
     setPreviewQueue(stream.seed ? [stream.seed, ...(stream.results ?? []).map(r => r.track)] : [])
   }, [stream.seed, stream.results])
 
-  const started   = lastQuery !== null
-  const notFound  = started && !stream.seed && !!stream.error
-  const showHome  = !started
+  const started  = lastQuery !== null
+  const notFound = started && !stream.seed && !!stream.error
+  const showHome = !started
+  const finished = !stream.running && stream.stages.every(s => s.status === 'done')
+  // Discovery moved since these results were made: offer to redo them
+  const canRerun = started && !stream.running && !!stream.seed
+    && Math.abs(discovery - (lastQuery?.discovery ?? discovery)) > 0.001
+
+  /**
+   * Start a search. `history`: push a new entry (a user action), or leave the
+   * URL alone because it already says this (back button, opened link).
+   * `fromUrl`: the form is empty then, so fill it in once the song is known.
+   */
+  function run(q: SearchQuery, history: 'push' | 'none', fromUrl = false) {
+    stopPreview()
+    setLastQuery(toActive(q))
+    setDiscovery(q.discovery)
+    if (history === 'push') pushQuery(q)
+    stream.start(
+      q.deezerId
+        ? { deezerId: q.deezerId, discovery: q.discovery }
+        : { title: q.title, artist: q.artist, discovery: q.discovery },
+      {
+        onSeed: (seed) => {
+          // typed text resolved to an exact track: link to that from now on
+          replaceQuery({ deezerId: seed.deezer_id, discovery: q.discovery })
+          document.title = `Similar to ${seed.title} | ${APP_TITLE}`
+          setLastQuery({ title: seed.title, artist: seed.artist, discovery: q.discovery })
+          if (fromUrl) {
+            setFormDefaults({ title: seed.title, artist: seed.artist })
+            setSearchKey(k => k + 1)
+          }
+        },
+      },
+    )
+  }
 
   function recommendFromTrack(track: Track) {
-    stopPreview()
-    setLastQuery({ title: track.title, artist: track.artist })
-    stream.start({ deezerId: track.deezer_id, discovery })
+    run({ deezerId: track.deezer_id, title: track.title, artist: track.artist, discovery }, 'push')
     window.scrollTo({ top: 0, behavior: scrollBehavior() })
   }
 
   function recommendFromText(title: string, artist: string) {
-    stopPreview()
-    setLastQuery({ title, artist })
-    stream.start({ title, artist, discovery })
+    run({ title, artist, discovery }, 'push')
   }
 
-  function handleReset() {
+  function rerun() {
+    if (stream.seed) recommendFromTrack(stream.seed)
+  }
+
+  function goHome(history: 'push' | 'none') {
     stopPreview()
     stream.reset()
     setLastQuery(null)
+    setFormDefaults({ title: '', artist: '' })
     setSearchKey(k => k + 1)
+    document.title = APP_TITLE
+    if (history === 'push') pushHome()
     // "Start over" sits at the bottom of a long list; home starts at the top
     window.scrollTo({ top: 0, behavior: scrollBehavior() })
   }
 
+  function handleReset() {
+    goHome('push')
+  }
+
+  function focusSearch() {
+    window.scrollTo({ top: 0, behavior: scrollBehavior() })
+    const input = document.getElementById('song-title') as HTMLInputElement | null
+    input?.focus({ preventScroll: true })
+    input?.select()
+  }
+
+  // follow the URL: on first load (shared link / reload) and on back/forward.
+  // Read through a ref so the listener always sees the latest state.
+  const followUrl = useRef(() => {})
+  useEffect(() => {
+    followUrl.current = () => {
+      const q = readQuery()
+      if (q) run(q, 'none', true)
+      else goHome('none')
+    }
+  })
+  useEffect(() => {
+    if (readQuery()) followUrl.current()
+    const onPop = () => followUrl.current()
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
+  // the sticky bar takes over once the full search form scrolls away
+  useEffect(() => {
+    const el = searchRef.current
+    if (!el) return
+    const io = new IntersectionObserver(([entry]) => setSearchOutOfView(!entry.isIntersecting))
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
   return (
     <AppShell themeToggle={<ThemeToggle theme={theme} onToggle={toggleTheme} />}>
+
+      <StickySeedBar seed={stream.seed} visible={started && searchOutOfView} onNewSearch={focusSearch} />
 
       {/* ── Hero ─────────────────────────────────────────── */}
       {/* popLayout takes the leaving hero out of the flow at once, so the
@@ -102,6 +197,7 @@ export default function App() {
       {/* the one orchestrated move: the search bar travels between its home
           and results positions ("position" only, so the inputs don't stretch) */}
       <motion.div
+        ref={searchRef}
         layout="position"
         transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
         className={showHome ? 'max-w-2xl mx-auto' : 'mb-6'}
@@ -113,6 +209,9 @@ export default function App() {
           discovery={discovery}
           onDiscoveryChange={setDiscovery}
           loading={stream.running}
+          defaultTitle={formDefaults.title}
+          defaultArtist={formDefaults.artist}
+          onRerun={canRerun ? rerun : undefined}
         />
       </motion.div>
 
@@ -158,14 +257,21 @@ export default function App() {
             transition={{ duration: 0.35, delay: 0.3, ease: 'easeOut' }}
             className="space-y-6"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                {stream.seed
-                  ? <SeedCard track={stream.seed} />
-                  : <div className="h-full min-h-40 rounded-2xl bg-bg-surface animate-pulse" />}
+            {finished && stream.seed ? (
+              // done: the steps fold into one line and the song gets the full width
+              <SeedCard track={stream.seed}>
+                <StageSummary stages={stream.stages} />
+              </SeedCard>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  {stream.seed
+                    ? <SeedCard track={stream.seed} />
+                    : <div className="h-full min-h-40 rounded-2xl bg-bg-surface animate-pulse" />}
+                </div>
+                <StageProgress stages={stream.stages} />
               </div>
-              <StageProgress stages={stream.stages} />
-            </div>
+            )}
 
             {stream.error && stream.seed && <ErrorBanner message={stream.error} />}
 
