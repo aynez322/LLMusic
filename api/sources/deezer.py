@@ -50,11 +50,15 @@ async def get_track(deezer_id: int) -> Track | None:
 
 # Signed preview URLs live ~15 minutes, so this lookup is cached for less than that.
 PREVIEW_TTL = 10 * 60
+# Own cache entry: get_track() caches the same URL for days, and sharing its
+# entry would hand back a long-expired preview link (the TTL only applies on write).
+PREVIEW_CACHE_KEY = {"purpose": "fresh-preview"}
 
 
 async def fresh_preview(deezer_id: int) -> str:
     """Preview URLs are signed and expire, so fetch a fresh one right before downloading."""
-    data = await get_json(f"{BASE}/track/{deezer_id}", limiter=limiter, ttl=PREVIEW_TTL)
+    data = await get_json(f"{BASE}/track/{deezer_id}", limiter=limiter, ttl=PREVIEW_TTL,
+                          cache_params=PREVIEW_CACHE_KEY)
     return (data or {}).get("preview", "") if data and "error" not in data else ""
 
 
