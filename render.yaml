@@ -8,7 +8,7 @@
 # Then trigger a redeploy of each so the values take effect.
 
 services:
-  # ── Backend: FastAPI + CrewAI ─────────────────────────────────────
+  # ── Backend: FastAPI + CLAP audio model ─────────────────────────────────────
   - type: web
     name: music-rec-api
     runtime: docker
@@ -17,8 +17,6 @@ services:
     region: frankfurt        # pick the region closest to you
     healthCheckPath: /api/health
     envVars:
-      - key: GEMINI_API_KEY
-        sync: false          # set in dashboard (secret)
       - key: LASTFM_API_KEY
         sync: false          # set in dashboard (secret)
       - key: FRONTEND_ORIGIN

@@ -1,11 +1,6 @@
-# ── Build-only data (NOT loaded at runtime) ──────────────────────────
-# Runtime needs only: merged_dataset.parquet, genre_fingerprints,
-# genre_classifier.pkl. Everything below is excluded to keep the image lean.
-data/datasets/
-data/training_dataset.parquet
-
-# Dataset-building scripts (not used by the API)
+# Offline scripts and tests (not used by the API)
 scripts/
+tests/
 
 # Node deps / prior frontend build (rebuilt fresh in stage 1)
 **/node_modules/
@@ -14,6 +9,7 @@ frontend/dist/
 # Python / venv / caches
 .venv/
 venv/
+.cache/
 __pycache__/
 **/__pycache__/
 *.py[cod]
@@ -24,4 +20,5 @@ __pycache__/
 .git/
 .claude/
 output/
+docs/
 *.png
