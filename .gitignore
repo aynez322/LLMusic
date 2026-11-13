@@ -1,9 +1,6 @@
 # Environment & secrets
 .env
 
-# Dataset files (large binaries — not tracked in git)
-#data/
-
 # Generated output
 output/
 
@@ -26,3 +23,5 @@ __pycache__/
 dist/
 *.egg-info/
 ./claude
+# HTTP + embedding cache
+.cache/
