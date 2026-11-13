@@ -7,6 +7,9 @@ const v = (name) =>
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  // hover styles only where a real pointer can hover, so taps on phones don't
+  // leave cards stuck in their hover state
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     extend: {
       colors: {
@@ -48,5 +51,8 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // `touch:` = primary input can't hover (phones, tablets)
+    ({ addVariant }) => addVariant('touch', '@media (hover: none)'),
+  ],
 }

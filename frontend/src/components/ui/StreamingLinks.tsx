@@ -78,12 +78,13 @@ function PlatformLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="flex items-center gap-1 rounded-md border transition-all duration-150"
+      // mouse only: a tap would otherwise leave the brand colour stuck on
+      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setHovered(true) }}
+      onPointerLeave={() => setHovered(false)}
+      className={`flex items-center gap-1 rounded-md border transition-all duration-150 touch:px-2.5 touch:py-1.5 ${
+        compact ? 'px-1.5 py-0.5 text-[11px]' : 'px-2 py-[3px] text-xs'
+      }`}
       style={{
-        padding: compact ? '2px 6px' : '3px 8px',
-        fontSize: compact ? '11px' : '12px',
         color:       hovered ? platform.brand : 'var(--color-text-muted)',
         borderColor: hovered ? platform.brand : 'var(--color-border)',
         backgroundColor: hovered ? `${platform.brand}10` : 'transparent',

@@ -10,11 +10,11 @@ const containerVariants = {
 }
 
 export function RecommendationList({ recommendations }: { recommendations: Recommendation[] }) {
-  const [selected, setSelected] = useState<Recommendation | null>(null)
+  const [selected, setSelected] = useState<number | null>(null)
 
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-4">
         <h2 className="font-display text-text-primary text-xl">You might also like</h2>
         <p className="text-text-muted text-xs">Play a cover to hear a 30s preview</p>
       </div>
@@ -24,12 +24,17 @@ export function RecommendationList({ recommendations }: { recommendations: Recom
             key={rec.track.deezer_id}
             rec={rec}
             rank={i + 1}
-            onClick={() => setSelected(rec)}
+            onClick={() => setSelected(i)}
           />
         ))}
       </motion.div>
 
-      <TrackDetailModal rec={selected} onClose={() => setSelected(null)} />
+      <TrackDetailModal
+        recs={recommendations}
+        index={selected}
+        onIndexChange={setSelected}
+        onClose={() => setSelected(null)}
+      />
     </div>
   )
 }

@@ -7,9 +7,10 @@ interface AppShellProps {
 
 export function AppShell({ children, themeToggle }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-bg-base flex flex-col transition-colors duration-[250ms]">
+    <div className="relative min-h-screen bg-bg-base flex flex-col transition-colors duration-[250ms]">
       {themeToggle && (
-        <div className="fixed top-4 right-4 z-50">
+        // phones: scrolls away with the page so it never covers content below
+        <div className="absolute sm:fixed top-4 right-4 z-40">
           {themeToggle}
         </div>
       )}

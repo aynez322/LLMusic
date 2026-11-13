@@ -13,6 +13,7 @@ import { TopTracksCarousel } from './components/home/TopTracksCarousel'
 import { HowItWorks } from './components/home/HowItWorks'
 import { ThemeToggle } from './components/ui/ThemeToggle'
 import { ErrorBanner } from './components/ui/ErrorBanner'
+import { scrollBehavior } from './lib/media'
 import type { Track } from './types/music'
 
 export default function App() {
@@ -31,8 +32,7 @@ export default function App() {
     stopPreview()
     setLastQuery({ title: track.title, artist: track.artist })
     stream.start({ deezerId: track.deezer_id, discovery })
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
+    window.scrollTo({ top: 0, behavior: scrollBehavior() })
   }
 
   function recommendFromText(title: string, artist: string) {

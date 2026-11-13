@@ -44,6 +44,17 @@ export function CoverPlayButton({ track, size = 64 }: CoverPlayButtonProps) {
           </span>
         </span>
       )}
+      {/* phones can't hover, so show a small persistent play badge instead */}
+      {canPlay && !playing && (
+        <span
+          aria-hidden
+          className="hidden touch:flex absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white items-center justify-center pointer-events-none"
+        >
+          <svg width="9" height="9" viewBox="0 0 12 12" fill="currentColor">
+            <path d="M3 1.8v8.4a.6.6 0 0 0 .9.5l7-4.2a.6.6 0 0 0 0-1L3.9 1.3a.6.6 0 0 0-.9.5z" />
+          </svg>
+        </span>
+      )}
       {playing && (
         <span className="absolute bottom-1 left-1 right-1 flex items-end justify-center gap-[2px] h-3 pointer-events-none">
           {[0, 1, 2, 3].map(i => (

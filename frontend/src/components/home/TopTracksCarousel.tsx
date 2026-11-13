@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTopTracks } from '../../hooks/useTopTracks'
+import { scrollBehavior } from '../../lib/media'
 import type { Track } from '../../types/music'
 
 interface TopTracksCarouselProps {
@@ -21,7 +22,7 @@ function TrackCard({ track, index, onClick }: {
       whileHover={{ y: -6, scale: 1.025 }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
-      className="group relative flex-shrink-0 w-40 rounded-2xl p-4 text-left overflow-hidden cursor-pointer border border-[var(--color-border)] bg-bg-surface hover:border-accent/60 transition-colors duration-200"
+      className="group relative flex-shrink-0 snap-start w-40 rounded-2xl p-4 text-left overflow-hidden cursor-pointer border border-[var(--color-border)] bg-bg-surface hover:border-accent/60 transition-colors duration-200"
       style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.35)' }}
     >
       {/* vinyl groove rings — decorative, top-right corner */}
@@ -93,9 +94,10 @@ function NavBtn({ dir, onClick }: { dir: 'left' | 'right'; onClick: () => void }
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.92 }}
       onClick={onClick}
-      className={`absolute top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-bg-raised border border-[var(--color-border)] hover:border-accent flex items-center justify-center text-accent text-lg font-light transition-colors shadow-lg ${dir === 'left' ? '-left-4' : '-right-4'}`}
+      aria-label={dir === 'left' ? 'Scroll back' : 'Scroll forward'}
+      className={`touch:hidden absolute top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-bg-raised border border-[var(--color-border)] hover:border-accent flex items-center justify-center text-accent text-lg font-light transition-colors shadow-lg ${dir === 'left' ? 'left-1 lg:-left-4' : 'right-1 lg:-right-4'}`}
     >
-      {dir === 'left' ? '‹' : '›'}
+      <span aria-hidden>{dir === 'left' ? '‹' : '›'}</span>
     </motion.button>
   )
 }
@@ -115,8 +117,19 @@ export function TopTracksCarousel({ onSelect }: TopTracksCarouselProps) {
   }
 
   function scroll(dir: 'left' | 'right') {
-    scrollRef.current?.scrollBy({ left: dir === 'right' ? 328 : -328, behavior: 'smooth' })
+    const el = scrollRef.current
+    if (!el) return
+    // most of a screenful; snap settles it on a card edge
+    const step = Math.max(el.clientWidth * 0.8, 172)
+    el.scrollBy({ left: dir === 'right' ? step : -step, behavior: scrollBehavior() })
   }
+
+  // edges depend on content width, which is only known once tracks render
+  useEffect(() => {
+    updateEdges()
+    window.addEventListener('resize', updateEdges)
+    return () => window.removeEventListener('resize', updateEdges)
+  }, [tracks])
 
   if (loading) return <Skeleton />
 
@@ -132,8 +145,8 @@ export function TopTracksCarousel({ onSelect }: TopTracksCarouselProps) {
         <span className="text-text-muted text-xs">Pick one to start from it</span>
       </div>
 
-      {/* scroll area */}
-      <div className="relative">
+      {/* scroll area: bleeds to the screen edges on phones (cancels main's px-4) */}
+      <div className="relative -mx-4 sm:mx-0">
         {/* left edge fade */}
         <div
           className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 z-10 transition-opacity duration-300"
@@ -144,8 +157,11 @@ export function TopTracksCarousel({ onSelect }: TopTracksCarouselProps) {
         />
         {/* right edge fade */}
         <div
-          className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 z-10"
-          style={{ background: 'linear-gradient(to left, var(--color-bg-base), transparent)' }}
+          className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 z-10 transition-opacity duration-300"
+          style={{
+            background: 'linear-gradient(to left, var(--color-bg-base), transparent)',
+            opacity: canNext ? 1 : 0,
+          }}
         />
 
         {/* nav buttons */}
@@ -160,7 +176,7 @@ export function TopTracksCarousel({ onSelect }: TopTracksCarouselProps) {
         <div
           ref={scrollRef}
           onScroll={updateEdges}
-          className="flex gap-3 overflow-x-auto pb-2"
+          className="flex gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory px-4 scroll-px-4 sm:px-0 sm:scroll-px-0 pt-2 pb-3"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {tracks.map((track, i) => (
