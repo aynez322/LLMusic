@@ -72,6 +72,9 @@ export function streamRecommendations(
         buffer = lines.pop() ?? ''
 
         for (const line of lines) {
+          // cancelled mid-chunk: drop what's left, so a late seed can't
+          // write its URL or title over the home page
+          if (controller.signal.aborted) return
           if (!line.startsWith('data:')) continue
           try {
             onEvent(JSON.parse(line.slice(5).trim()))

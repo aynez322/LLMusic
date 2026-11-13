@@ -17,7 +17,7 @@ import { ThemeToggle } from './components/ui/ThemeToggle'
 import { ErrorBanner } from './components/ui/ErrorBanner'
 import { scrollBehavior } from './lib/media'
 import {
-  DEFAULT_DISCOVERY, pushHome, pushQuery, readQuery, replaceQuery, type SearchQuery,
+  DEFAULT_DISCOVERY, pushHome, pushQuery, readQuery, replaceHome, replaceQuery, type SearchQuery,
 } from './lib/urlState'
 import type { Track } from './types/music'
 
@@ -102,7 +102,7 @@ export default function App() {
     if (stream.seed) recommendFromTrack(stream.seed)
   }
 
-  function goHome(history: 'push' | 'none') {
+  function goHome(history: 'push' | 'replace' | 'none') {
     stopPreview()
     stream.reset()
     setLastQuery(null)
@@ -110,12 +110,19 @@ export default function App() {
     setSearchKey(k => k + 1)
     document.title = APP_TITLE
     if (history === 'push') pushHome()
+    if (history === 'replace') replaceHome()
     // "Start over" sits at the bottom of a long list; home starts at the top
     window.scrollTo({ top: 0, behavior: scrollBehavior() })
   }
 
   function handleReset() {
     goHome('push')
+  }
+
+  // misclicked a song: stop the search and drop it from history, so Back
+  // doesn't lead straight into it again
+  function handleCancel() {
+    goHome('replace')
   }
 
   function focusSearch() {
@@ -212,6 +219,7 @@ export default function App() {
           defaultTitle={formDefaults.title}
           defaultArtist={formDefaults.artist}
           onRerun={canRerun ? rerun : undefined}
+          onCancel={stream.running ? handleCancel : undefined}
         />
       </motion.div>
 

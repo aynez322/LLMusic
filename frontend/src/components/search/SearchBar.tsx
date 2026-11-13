@@ -17,6 +17,8 @@ interface SearchBarProps {
   defaultArtist?: string
   /** Shown when Discovery no longer matches the results on screen. */
   onRerun?: () => void
+  /** Shown while a search runs: stop it and go back home. */
+  onCancel?: () => void
 }
 
 function discoveryLabel(v: number): string {
@@ -27,7 +29,7 @@ function discoveryLabel(v: number): string {
 
 export function SearchBar({
   onPick, onSubmit, discovery, onDiscoveryChange, loading = false,
-  defaultTitle = '', defaultArtist = '', onRerun,
+  defaultTitle = '', defaultArtist = '', onRerun, onCancel,
 }: SearchBarProps) {
   const [title, setTitle]   = useState(defaultTitle)
   const [artist, setArtist] = useState(defaultArtist)
@@ -120,10 +122,19 @@ export function SearchBar({
               />
             </div>
 
-            <div className="sm:self-end">
+            <div className="sm:self-end flex flex-col sm:flex-row gap-2">
               <Button type="submit" loading={loading} shake={shake} className="w-full sm:w-auto">
                 Find Similar
               </Button>
+              {onCancel && (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[var(--color-border)] hover:border-accent text-text-secondary hover:text-accent text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
             </div>
           </div>
 

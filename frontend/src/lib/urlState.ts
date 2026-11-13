@@ -50,3 +50,8 @@ export function replaceQuery(q: SearchQuery) {
 export function pushHome() {
   if (window.location.search) window.history.pushState(null, '', window.location.pathname)
 }
+
+/** Home in place of the current entry: a cancelled search leaves no trace in history. */
+export function replaceHome() {
+  window.history.replaceState(null, '', window.location.pathname)
+}
