@@ -6,7 +6,7 @@
 
 ---
 
-![LLMusic home page screenshot](docs/screenshot.png)
+![Demo: typing "Holocene" by Bon Iver and getting ten recommendations with reasons](docs/demo.gif)
 
 ---
 
