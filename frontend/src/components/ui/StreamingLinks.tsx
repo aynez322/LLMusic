@@ -83,7 +83,7 @@ function PlatformLink({
       className="flex items-center gap-1 rounded-md border transition-all duration-150"
       style={{
         padding: compact ? '2px 6px' : '3px 8px',
-        fontSize: compact ? '9px' : '10px',
+        fontSize: compact ? '11px' : '12px',
         color:       hovered ? platform.brand : 'var(--color-text-muted)',
         borderColor: hovered ? platform.brand : 'var(--color-border)',
         backgroundColor: hovered ? `${platform.brand}10` : 'transparent',

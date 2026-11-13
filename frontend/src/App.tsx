@@ -31,7 +31,8 @@ export default function App() {
     stopPreview()
     setLastQuery({ title: track.title, artist: track.artist })
     stream.start({ deezerId: track.deezer_id, discovery })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
   }
 
   function recommendFromText(title: string, artist: string) {

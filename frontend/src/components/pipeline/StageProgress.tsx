@@ -21,7 +21,7 @@ function StatusIcon({ status }: { status: StageStatus }) {
     )
   }
   if (status === 'error') return <span className="text-red-400 text-xs font-bold leading-none">✕</span>
-  return <span className="w-3.5 h-3.5 rounded-full border border-[var(--color-border)] block" />
+  return <span className="w-3.5 h-3.5 rounded-full border border-text-muted/50 block" />
 }
 
 export function StageProgress({ stages }: { stages: StageState[] }) {
@@ -32,8 +32,8 @@ export function StageProgress({ stages }: { stages: StageState[] }) {
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className="bg-bg-surface border border-[var(--color-border)] rounded-2xl p-5 card-glow"
       aria-live="polite"
+      aria-label="Progress"
     >
-      <p className="text-text-muted text-[10px] uppercase tracking-widest mb-4 font-medium">Progress</p>
       <div className="flex flex-col gap-3.5">
         {stages.map(stage => (
           <div key={stage.id} className="flex items-start gap-3">

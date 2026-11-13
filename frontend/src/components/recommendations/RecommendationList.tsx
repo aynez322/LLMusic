@@ -15,8 +15,8 @@ export function RecommendationList({ recommendations }: { recommendations: Recom
   return (
     <div>
       <div className="flex items-baseline justify-between mb-4">
-        <p className="text-text-muted text-[10px] uppercase tracking-widest font-medium">You might also like</p>
-        <p className="text-text-muted text-[10px]">click a cover to hear a preview</p>
+        <h2 className="font-display text-text-primary text-xl">You might also like</h2>
+        <p className="text-text-muted text-xs">Play a cover to hear a 30s preview</p>
       </div>
       <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-3">
         {recommendations.map((rec, i) => (

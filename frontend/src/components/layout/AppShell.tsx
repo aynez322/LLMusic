@@ -7,7 +7,7 @@ interface AppShellProps {
 
 export function AppShell({ children, themeToggle }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-bg-base flex flex-col transition-colors duration-250">
+    <div className="min-h-screen bg-bg-base flex flex-col transition-colors duration-[250ms]">
       {themeToggle && (
         <div className="fixed top-4 right-4 z-50">
           {themeToggle}

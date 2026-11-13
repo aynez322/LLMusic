@@ -54,7 +54,7 @@ function TrackCard({ track, index, onClick }: {
       </p>
 
       {/* artist */}
-      <p className="text-text-muted text-[10px] truncate">
+      <p className="text-text-muted text-xs truncate">
         {track.artist}
       </p>
     </motion.button>
@@ -126,10 +126,10 @@ export function TopTracksCarousel({ onSelect }: TopTracksCarouselProps) {
     <div className="mt-10">
       {/* header */}
       <div className="flex items-baseline justify-between mb-4 px-1">
-        <h2 className="font-display text-text-secondary text-sm tracking-[0.12em] uppercase">
+        <h2 className="font-display text-text-primary text-xl">
           Trending now
         </h2>
-        <span className="text-text-muted text-[10px] tracking-wide">click any to explore</span>
+        <span className="text-text-muted text-xs">Pick one to start from it</span>
       </div>
 
       {/* scroll area */}

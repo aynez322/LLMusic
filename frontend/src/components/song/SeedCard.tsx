@@ -11,7 +11,7 @@ export function SeedCard({ track }: { track: Track }) {
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="bg-bg-surface border border-[var(--color-border)] rounded-2xl p-6 card-glow h-full"
     >
-      <p className="text-text-muted text-[10px] uppercase tracking-widest mb-4">Because you like</p>
+      <p className="text-text-secondary text-sm mb-4">Because you like</p>
       <div className="flex gap-5 items-center">
         <CoverPlayButton track={track} size={112} />
         <div className="min-w-0">

@@ -31,14 +31,14 @@ export function Button({
       whileTap={!disabled && !loading ? { scale: 0.97 } : {}}
       className={`
         inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
-        font-semibold text-sm text-white
-        bg-accent hover:bg-accent-light
+        font-semibold text-sm text-on-accent
+        bg-accent-fill hover:bg-accent-fill-hover
         transition-colors duration-150
         disabled:opacity-50 disabled:cursor-not-allowed
         ${className}
       `}
     >
-      {loading && <Spinner size={15} color="white" />}
+      {loading && <Spinner size={15} color="currentColor" />}
       {children}
     </motion.button>
   )

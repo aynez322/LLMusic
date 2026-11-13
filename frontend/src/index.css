@@ -15,6 +15,11 @@
   --color-accent:       #D4692A;
   --color-accent-light: #E8844A;
   --color-cyan:         #10C5A8;
+
+  /* filled buttons: fill + the text that sits on it (both ≥ 4.5:1) */
+  --color-accent-fill:       #D4692A;
+  --color-accent-fill-hover: #E8844A;
+  --color-on-accent:         #120A04;
   --color-cyan-soft:    #0DA08A;
 
   /* status */
@@ -23,11 +28,13 @@
 
   /* text — warm cream scale */
   --color-text-primary:   #EDE0C8;
-  --color-text-secondary: #8C7862;
-  --color-text-muted:     #4A3C2C;
+  --color-text-secondary: #A39079;  /* 6.1:1 on raised */
+  --color-text-muted:     #8F7B65;  /* 4.7:1 on raised */
 
   /* badge */
   --color-badge-bg: #180E08;
+
+  color-scheme: dark;
 }
 
 [data-theme="light"] {
@@ -42,14 +49,20 @@
   --color-cyan:         #0B9E8B;
   --color-cyan-soft:    #0A8A7A;
 
+  --color-accent-fill:       #AA4F1A;
+  --color-accent-fill-hover: #B4561E;
+  --color-on-accent:         #FFFFFF;
+
   --color-success: #3EA868;
   --color-amber:   #CC8F10;
 
   --color-text-primary:   #1A1208;
   --color-text-secondary: #6B5040;
-  --color-text-muted:     #A8907A;
+  --color-text-muted:     #7A5E4C;  /* 4.9:1 on raised */
 
   --color-badge-bg: #FDF5EE;
+
+  color-scheme: light;
 }
 
 @layer base {
@@ -67,6 +80,11 @@
     transition: background-color 0.25s ease, color 0.2s ease;
   }
 
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--color-bg-surface); }
   ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
@@ -76,7 +94,7 @@
 @layer utilities {
   .gradient-text {
     font-family: 'Playfair Display', Georgia, serif;
-    background: linear-gradient(135deg, #D4692A 0%, #10C5A8 100%);
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-cyan) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -133,5 +151,21 @@
   .card-glow-hover {
     box-shadow: 0 0 0 1px var(--color-accent),
                 0 8px 32px rgba(212, 105, 42, 0.22);
+  }
+}
+
+/* Respect the OS "reduce motion" setting. Framer Motion is handled by
+   <MotionConfig reducedMotion="user">; this covers CSS animations and
+   transitions. Spinners opt out with .motion-essential (they signal work). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .motion-essential {
+    animation-duration: 1.2s !important;
+    animation-iteration-count: infinite !important;
   }
 }

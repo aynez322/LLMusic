@@ -79,7 +79,7 @@ export function SearchBar({ onPick, onSubmit, discovery, onDiscoveryChange, load
         <div className="relative">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
-              <label htmlFor="song-title" className="block text-xs text-text-muted mb-1.5 font-medium tracking-wide uppercase">
+              <label htmlFor="song-title" className="block text-sm text-text-secondary mb-1.5 font-medium">
                 Song
               </label>
               <input
@@ -96,7 +96,7 @@ export function SearchBar({ onPick, onSubmit, discovery, onDiscoveryChange, load
             </div>
 
             <div className="flex-1">
-              <label htmlFor="song-artist" className="block text-xs text-text-muted mb-1.5 font-medium tracking-wide uppercase">
+              <label htmlFor="song-artist" className="block text-sm text-text-secondary mb-1.5 font-medium">
                 Artist
               </label>
               <input
@@ -161,7 +161,7 @@ export function SearchBar({ onPick, onSubmit, discovery, onDiscoveryChange, load
 
         {/* Discovery dial */}
         <div className="mt-4 flex items-center gap-3">
-          <label htmlFor="discovery" className="text-xs text-text-muted font-medium tracking-wide uppercase whitespace-nowrap">
+          <label htmlFor="discovery" className="text-sm text-text-secondary font-medium whitespace-nowrap">
             Discovery
           </label>
           <input
@@ -176,7 +176,7 @@ export function SearchBar({ onPick, onSubmit, discovery, onDiscoveryChange, load
             style={{ '--fill': `${discovery * 100}%` } as React.CSSProperties}
             aria-valuetext={discoveryLabel(discovery)}
           />
-          <span className="text-xs text-text-secondary w-24">{discoveryLabel(discovery)}</span>
+          <span className="text-sm text-text-primary w-24">{discoveryLabel(discovery)}</span>
         </div>
       </form>
     </div>

@@ -25,7 +25,7 @@ export function SongNotFound({ title, artist, message, suggestions, onDismiss, o
       <div className="p-6">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div>
-            <p className="text-text-muted text-[10px] uppercase tracking-widest font-medium">{message}</p>
+            <p className="text-text-secondary text-sm" role="alert">{message}</p>
             <p className="text-text-primary font-display font-semibold text-base leading-tight mt-1" style={{ wordBreak: 'break-word' }}>
               {title || 'Unknown title'}
             </p>
@@ -42,7 +42,7 @@ export function SongNotFound({ title, artist, message, suggestions, onDismiss, o
 
         {suggestions.length > 0 ? (
           <>
-            <p className="text-text-muted text-[10px] uppercase tracking-wider mb-2 mt-4">Did you mean?</p>
+            <p className="text-text-secondary text-sm mb-2 mt-4">Did you mean one of these?</p>
             <div className="flex flex-col gap-1.5">
               {suggestions.map((t, i) => (
                 <motion.button
