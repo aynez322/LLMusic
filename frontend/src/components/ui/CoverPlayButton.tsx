@@ -1,25 +1,30 @@
+import { motion } from 'framer-motion'
 import type { Track } from '../../types/music'
 import { togglePreview, useIsPlaying } from '../../hooks/usePreviewPlayer'
 
 interface CoverPlayButtonProps {
   track: Track
   size?: number
+  /** Shared-element id: covers with the same id animate between each other. */
+  layoutId?: string
 }
 
 /** Album cover that plays/pauses the track's 30s preview when clicked. */
-export function CoverPlayButton({ track, size = 64 }: CoverPlayButtonProps) {
+export function CoverPlayButton({ track, size = 64, layoutId }: CoverPlayButtonProps) {
   const playing = useIsPlaying(track.deezer_id)
   const canPlay = !!track.preview
 
   return (
-    <button
+    <motion.button
+      layoutId={layoutId}
+      transition={{ layout: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }}
       type="button"
       disabled={!canPlay}
       onClick={(e) => { e.stopPropagation(); togglePreview(track.deezer_id, track.preview) }}
       aria-label={playing ? `Pause ${track.title}` : `Play preview of ${track.title}`}
       title={canPlay ? (playing ? 'Pause preview' : 'Play 30s preview') : 'No preview available'}
-      className="group/cover relative flex-shrink-0 rounded-xl overflow-hidden border border-[var(--color-border)] bg-bg-raised disabled:cursor-default"
-      style={{ width: size, height: size }}
+      className="group/cover relative flex-shrink-0 overflow-hidden border border-[var(--color-border)] bg-bg-raised disabled:cursor-default"
+      style={{ width: size, height: size, borderRadius: 12 }}
     >
       {track.cover && (
         <img src={track.cover} alt="" className="w-full h-full object-cover" loading="lazy" />
@@ -66,6 +71,6 @@ export function CoverPlayButton({ track, size = 64 }: CoverPlayButtonProps) {
           ))}
         </span>
       )}
-    </button>
+    </motion.button>
   )
 }

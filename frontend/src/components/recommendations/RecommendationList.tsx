@@ -11,6 +11,7 @@ const containerVariants = {
 
 export function RecommendationList({ recommendations }: { recommendations: Recommendation[] }) {
   const [selected, setSelected] = useState<number | null>(null)
+  const [origin, setOrigin]     = useState<number | null>(null)
 
   return (
     <div>
@@ -24,7 +25,7 @@ export function RecommendationList({ recommendations }: { recommendations: Recom
             key={rec.track.deezer_id}
             rec={rec}
             rank={i + 1}
-            onClick={() => setSelected(i)}
+            onClick={() => { setOrigin(i); setSelected(i) }}
           />
         ))}
       </motion.div>
@@ -32,7 +33,9 @@ export function RecommendationList({ recommendations }: { recommendations: Recom
       <TrackDetailModal
         recs={recommendations}
         index={selected}
-        onIndexChange={setSelected}
+        originIndex={origin}
+        // browsing away ends the shared-cover link: only the opened track flies home
+        onIndexChange={(i) => { setOrigin(null); setSelected(i) }}
         onClose={() => setSelected(null)}
       />
     </div>

@@ -79,7 +79,7 @@ export function RecommendationCard({ rec, rank, onClick }: RecommendationCardPro
       <div className="flex items-start gap-4">
         {/* z-10: sits above the title button's card-wide hit area */}
         <div className="relative z-10">
-          <CoverPlayButton track={track} size={72} />
+          <CoverPlayButton track={track} size={72} layoutId={`cover-${track.deezer_id}`} />
           <span className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-bg-base border border-accent/40 flex items-center justify-center text-accent text-[11px] font-bold">
             {rank}
           </span>

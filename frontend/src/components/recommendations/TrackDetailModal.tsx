@@ -11,6 +11,8 @@ interface TrackDetailModalProps {
   recs: Recommendation[]
   /** Which recommendation is open; null = closed. */
   index: number | null
+  /** The track the dialog was opened from; its cover grows out of the card. */
+  originIndex?: number | null
   onIndexChange: (index: number) => void
   onClose: () => void
 }
@@ -36,26 +38,31 @@ const SHEET = {
   animate: { y: 0, transition: { type: 'spring' as const, damping: 34, stiffness: 340 } },
   exit:    { y: '100%', transition: { duration: 0.22, ease: 'easeIn' as const } },
 }
+// No scale/slide here: the cover flies in from its card (shared layoutId),
+// and a moving panel would make it land off-target.
 const CARD = {
-  initial: { scale: 0.93, y: 32 },
-  animate: { scale: 1, y: 0, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const } },
-  exit:    { scale: 0.93, y: 20, transition: { duration: 0.18 } },
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.2 } },
+  exit:    { opacity: 0, transition: { duration: 0.2 } },
 }
 
-// next/previous track slides in from the side it was swiped towards
+// next/previous track slides in from the side it was swiped towards.
+// dir 0 = not browsing (dialog closing): fade only, so the cover can fly home.
 const SLIDE = {
   enter:  (dir: number) => ({ x: dir * 48, opacity: 0 }),
   center: { x: 0, opacity: 1, transition: { duration: 0.18, ease: 'easeOut' as const } },
-  exit:   (dir: number) => ({ x: dir * -48, opacity: 0, transition: { duration: 0.12, ease: 'easeIn' as const } }),
+  exit:   (dir: number) => dir === 0
+    ? { opacity: 0, transition: { duration: 0.15 } }
+    : { x: dir * -48, opacity: 0, transition: { duration: 0.12, ease: 'easeIn' as const } },
 }
 
-export function TrackDetailModal({ recs, index, onIndexChange, onClose }: TrackDetailModalProps) {
+export function TrackDetailModal({ recs, index, originIndex = null, onIndexChange, onClose }: TrackDetailModalProps) {
   const rec = index !== null ? recs[index] ?? null : null
   const { info, loading, load } = useTrackInfo()
   const panelRef = useRef<HTMLDivElement>(null)
   const isSheet = useMediaQuery('(max-width: 639px)')
   const dragControls = useDragControls()
-  const [dir, setDir] = useState(1)
+  const [dir, setDir] = useState(0)
 
   useDialog(!!rec, panelRef, onClose)
 
@@ -143,7 +150,15 @@ export function TrackDetailModal({ recs, index, onIndexChange, onClose }: TrackD
               )}
 
               <motion.div onPanEnd={onPanEnd} className="flex-1 min-h-0 flex flex-col">
-                <AnimatePresence mode="wait" initial={false} custom={dir}>
+                {/* propagate: closing the dialog also "exits" the current track, which
+                    is what hands the shared cover back to its card */}
+                <AnimatePresence
+                  mode="wait"
+                  initial={false}
+                  custom={dir}
+                  propagate
+                  onExitComplete={() => setDir(0)}
+                >
                   <motion.div
                     key={rec.track.deezer_id}
                     custom={dir}
@@ -159,7 +174,13 @@ export function TrackDetailModal({ recs, index, onIndexChange, onClose }: TrackD
                       className="flex-shrink-0 flex gap-5 px-6 pt-4 sm:pt-6 pb-4"
                       style={isSheet ? { touchAction: 'none' } : undefined}
                     >
-                      <CoverPlayButton track={rec.track} size={88} />
+                      <CoverPlayButton
+                        track={rec.track}
+                        size={88}
+                        // only the opened track flies (browsing to others would pull
+                        // their covers out of the list behind); phones use the sheet
+                        layoutId={!isSheet && index === originIndex ? `cover-${rec.track.deezer_id}` : undefined}
+                      />
                       <div className="flex-1 min-w-0 pr-8">
                         <h2 className="font-display gradient-text text-xl font-bold break-words" style={{ lineHeight: 1.22 }}>
                           {rec.track.title}

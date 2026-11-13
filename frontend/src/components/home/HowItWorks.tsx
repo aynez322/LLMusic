@@ -33,12 +33,9 @@ export function HowItWorks() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {steps.map((step, i) => (
-          <motion.div
+        {steps.map(step => (
+          <div
             key={step.num}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.22 + i * 0.07, ease: 'easeOut' }}
             className="relative rounded-2xl border border-[var(--color-border)] bg-bg-surface p-5 overflow-hidden"
           >
             <p className="gradient-text text-xl font-bold leading-none mb-3 select-none">
@@ -50,7 +47,7 @@ export function HowItWorks() {
             <p className="text-text-secondary text-sm leading-relaxed">
               {step.desc}
             </p>
-          </motion.div>
+          </div>
         ))}
       </div>
     </motion.div>

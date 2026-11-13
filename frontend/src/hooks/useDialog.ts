@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react'
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -13,7 +13,10 @@ export function useDialog(open: boolean, ref: RefObject<HTMLElement | null>, onC
   const closeRef = useRef(onClose)
   useEffect(() => { closeRef.current = onClose })
 
-  useEffect(() => {
+  // layout effect: the scroll lock (which removes the scrollbar) must land
+  // before Framer measures the dialog, or shared-layout animations aim at a
+  // position that then shifts by the scrollbar's width
+  useLayoutEffect(() => {
     if (!open) return
     const opener = document.activeElement as HTMLElement | null
 

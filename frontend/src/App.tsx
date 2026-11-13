@@ -46,19 +46,24 @@ export default function App() {
     stream.reset()
     setLastQuery(null)
     setSearchKey(k => k + 1)
+    // "Start over" sits at the bottom of a long list; home starts at the top
+    window.scrollTo({ top: 0, behavior: scrollBehavior() })
   }
 
   return (
     <AppShell themeToggle={<ThemeToggle theme={theme} onToggle={toggleTheme} />}>
 
       {/* ── Hero ─────────────────────────────────────────── */}
-      <AnimatePresence>
+      {/* popLayout takes the leaving hero out of the flow at once, so the
+          search bar can start gliding up immediately instead of jumping
+          when the fade ends */}
+      <AnimatePresence mode="popLayout">
         {showHome && (
           <motion.div
             key="hero"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14, transition: { duration: 0.18 } }}
+            exit={{ opacity: 0, y: -14, transition: { duration: 0.12 } }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
             className="text-center mb-10 mt-10"
           >
@@ -86,7 +91,13 @@ export default function App() {
       </AnimatePresence>
 
       {/* ── Search ───────────────────────────────────────── */}
-      <div className={showHome ? 'max-w-2xl mx-auto' : 'mb-6'}>
+      {/* the one orchestrated move: the search bar travels between its home
+          and results positions ("position" only, so the inputs don't stretch) */}
+      <motion.div
+        layout="position"
+        transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
+        className={showHome ? 'max-w-2xl mx-auto' : 'mb-6'}
+      >
         <SearchBar
           key={searchKey}
           onPick={recommendFromTrack}
@@ -95,7 +106,7 @@ export default function App() {
           onDiscoveryChange={setDiscovery}
           loading={stream.running}
         />
-      </div>
+      </motion.div>
 
       {/* ── Song not found ───────────────────────────────── */}
       <AnimatePresence>
@@ -113,7 +124,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* ── Home: chart + how it works ───────────────────── */}
-      <AnimatePresence>
+      <AnimatePresence mode="popLayout">
         {showHome && (
           <motion.div
             key="home"
@@ -133,9 +144,10 @@ export default function App() {
         {started && !notFound && (
           <motion.div
             key="results"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            // wait for the search bar to mostly arrive, so it never slides over them
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.3, ease: 'easeOut' }}
             className="space-y-6"
           >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
