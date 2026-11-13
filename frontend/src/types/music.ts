@@ -1,58 +1,51 @@
-export interface AudioFeatures {
-  danceability: number
-  energy: number
-  loudness: number
-  speechiness: number
-  acousticness: number
-  instrumentalness: number
-  liveness: number
-  valence: number
-  tempo: number
+export interface Track {
+  deezer_id: number
+  title: string
+  artist: string
+  artist_id: number
+  album: string
+  cover: string
+  preview: string
+  link: string
+  rank: number
+  isrc: string
 }
 
-export interface Song {
-  track_name: string
-  artists: string
-  genre: string
-  popularity: number
-  features: AudioFeatures
+export type ReasonKind = 'listeners' | 'artist' | 'sound' | 'tags'
+
+export interface Reason {
+  kind: ReasonKind
+  text: string
 }
 
 export interface Recommendation {
-  track_name: string
-  artists: string
-  genre: string
-  popularity: number
-  similarity_score: number
+  track: Track
+  score: number
+  sound_similarity: number | null
+  listener_score: number
+  reasons: Reason[]
 }
 
-export type AgentId = 'song_analyzer' | 'music_researcher' | 'explainability_agent'
-export type AgentStatus = 'idle' | 'running' | 'done' | 'error'
+export interface RecommendParams {
+  deezerId?: number
+  title?: string
+  artist?: string
+  discovery: number
+}
 
-export interface AgentState {
-  id: AgentId
+export type StageId = 'resolve' | 'candidates' | 'listening' | 'ranking'
+export type StageStatus = 'idle' | 'running' | 'done' | 'error'
+
+export interface StageState {
+  id: StageId
   label: string
-  status: AgentStatus
+  status: StageStatus
+  detail: string
 }
 
-export type SSEEventType =
-  | 'agent_start'
-  | 'agent_done'
-  | 'agent_error'
-  | 'result'
-  | 'error'
-  | 'done'
-
-export interface SSEEvent {
-  type: SSEEventType
-  agent?: AgentId
-  data?: string
-  message?: string
-  suggestions?: string[]
-  recommendations?: Recommendation[]
-}
-
-export interface LookupError {
-  error: string
-  suggestions?: string[]
-}
+export type SSEEvent =
+  | { type: 'stage'; stage: StageId; status: 'start' | 'done'; detail: string }
+  | { type: 'seed'; track: Track }
+  | { type: 'results'; items: Recommendation[] }
+  | { type: 'error'; message: string; suggestions: Track[] }
+  | { type: 'done' }

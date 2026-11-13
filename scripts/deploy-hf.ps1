@@ -1,10 +1,13 @@
 <#
   Deploy LLMusic to the Hugging Face Space (https://huggingface.co/spaces/aynez/llmusic).
 
-  Pushes a SINGLE clean commit to the Space's `main`, containing the app plus the
-  three runtime data files, but WITHOUT the ~1 GB of build-only CSVs that live in
-  this repo's history. HF Spaces have a 1 GB storage limit, so the full history
-  (which includes those CSVs) cannot be pushed directly.
+  Pushes a SINGLE clean commit to the Space's `main`. HF Spaces have a 1 GB
+  storage limit and this repo's history contains ~1 GB of old dataset CSVs, so
+  the full history cannot be pushed directly.
+
+  The Space also needs a YAML metadata header at the top of README.md (sdk,
+  app_port, ...). It is added only in the deploy commit, so the GitHub README
+  stays clean.
 
   Usage (from anywhere inside the repo):
       ./scripts/deploy-hf.ps1
@@ -37,7 +40,24 @@ try {
     # An orphan branch is a single commit with no history, so the large CSVs in
     # this repo's past commits are never referenced and never uploaded to HF.
     git checkout --orphan hf-temp | Out-Null
-    git rm -r --cached --quiet data/datasets data/training_dataset.parquet | Out-Null
+
+    # emoji built from its code point: PowerShell 5.1 reads BOM-less scripts as ANSI
+    $header = @'
+---
+title: LLMusic
+emoji: {EMOJI}
+colorFrom: red
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
+'@
+    $header = $header.Replace('{EMOJI}', [char]::ConvertFromUtf32(0x1F3B5))
+    $readme = Get-Content README.md -Raw -Encoding UTF8
+    [IO.File]::WriteAllText((Join-Path (Get-Location) 'README.md'), $header + $readme, (New-Object Text.UTF8Encoding $false))
+    git add README.md
     git commit -q -m "Deploy LLMusic ($(Get-Date -Format 'yyyy-MM-dd HH:mm'))" | Out-Null
 
     Write-Host 'Pushing to Hugging Face (hf -> main)...' -ForegroundColor Cyan

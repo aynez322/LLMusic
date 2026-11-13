@@ -1,20 +1,13 @@
 import { useEffect, useState } from 'react'
-
-export interface TopTrack {
-  rank: number
-  title: string
-  artist: string
-  genre: string
-  popularity: number   // 0–100 from the dataset
-}
+import { chartTracks } from '../api/client'
+import type { Track } from '../types/music'
 
 export function useTopTracks(limit = 20) {
-  const [tracks, setTracks]   = useState<TopTrack[]>([])
+  const [tracks, setTracks]   = useState<Track[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`/api/top-tracks?limit=${limit}`)
-      .then(r => (r.ok ? r.json() : []))
+    chartTracks(limit)
       .then(setTracks)
       .catch(() => setTracks([]))
       .finally(() => setLoading(false))

@@ -3,63 +3,56 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { AppShell } from './components/layout/AppShell'
 import { SearchBar } from './components/search/SearchBar'
 import { SongNotFound } from './components/search/SongNotFound'
-import { SongCard } from './components/song/SongCard'
+import { SeedCard } from './components/song/SeedCard'
 import { RecommendationList } from './components/recommendations/RecommendationList'
-import { AgentStatusPanel } from './components/pipeline/AgentStatusPanel'
-import { AnalysisReport } from './components/pipeline/AnalysisReport'
-import { ErrorBanner } from './components/ui/ErrorBanner'
-import { useSongLookup } from './hooks/useSongLookup'
-import { useSimilarSongs } from './hooks/useSimilarSongs'
+import { StageProgress } from './components/pipeline/StageProgress'
 import { useRecommendStream } from './hooks/useRecommendStream'
+import { stopPreview } from './hooks/usePreviewPlayer'
 import { useTheme } from './hooks/useTheme'
-import { extractExplanations } from './utils/featureLabels'
 import { TopTracksCarousel } from './components/home/TopTracksCarousel'
 import { HowItWorks } from './components/home/HowItWorks'
-import { StreamingLinksPanel } from './components/pipeline/StreamingLinksPanel'
 import { ThemeToggle } from './components/ui/ThemeToggle'
+import { ErrorBanner } from './components/ui/ErrorBanner'
+import type { Track } from './types/music'
 
 export default function App() {
   const { theme, toggle: toggleTheme } = useTheme()
-  const lookupHook = useSongLookup()
-  const similarHook = useSimilarSongs()
-  const streamHook = useRecommendStream()
+  const stream = useRecommendStream()
 
-  const [searchKey, setSearchKey] = useState(0)
-  const [lastSearched, setLastSearched] = useState<{ title: string; artist: string } | null>(null)
+  const [searchKey, setSearchKey]     = useState(0)
+  const [discovery, setDiscovery]     = useState(0.5)
+  const [lastQuery, setLastQuery]     = useState<{ title: string; artist: string } | null>(null)
 
-  const hasResults   = !!lookupHook.song
-  const isLoading    = lookupHook.loading
-  const hasError     = !hasResults && !!lookupHook.error
-  const explanations = streamHook.markdown ? extractExplanations(streamHook.markdown) : {}
+  const started   = lastQuery !== null
+  const notFound  = started && !stream.seed && !!stream.error
+  const showHome  = !started
 
-  function handleReset() {
-    lookupHook.reset()
-    similarHook.reset()
-    streamHook.reset()
-    setLastSearched(null)
-    setSearchKey(k => k + 1)
+  function recommendFromTrack(track: Track) {
+    stopPreview()
+    setLastQuery({ title: track.title, artist: track.artist })
+    stream.start({ deezerId: track.deezer_id, discovery })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  async function handleSubmit(title: string, artist: string) {
-    setLastSearched({ title, artist })
-    streamHook.reset()
+  function recommendFromText(title: string, artist: string) {
+    stopPreview()
+    setLastQuery({ title, artist })
+    stream.start({ title, artist, discovery })
+  }
 
-    const [songResult] = await Promise.all([
-      lookupHook.lookup(title, artist),
-      similarHook.search(title, artist),
-    ])
-
-    if (songResult) {
-      streamHook.start(title, artist)
-    }
+  function handleReset() {
+    stopPreview()
+    stream.reset()
+    setLastQuery(null)
+    setSearchKey(k => k + 1)
   }
 
   return (
     <AppShell themeToggle={<ThemeToggle theme={theme} onToggle={toggleTheme} />}>
 
-      {/* ── Hero (idle, no error) ────────────────────────── */}
+      {/* ── Hero ─────────────────────────────────────────── */}
       <AnimatePresence>
-        {!hasResults && !isLoading && !hasError && (
+        {showHome && (
           <motion.div
             key="hero"
             initial={{ opacity: 0, y: 18 }}
@@ -81,47 +74,52 @@ export default function App() {
             <h1 className="gradient-text text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
               Discover Your Sound
             </h1>
-            <p className="text-text-secondary text-base mt-3 max-w-sm mx-auto leading-relaxed">
-              Enter any song and our AI will find the most musically similar tracks using 9 audio features.
+            <p className="text-text-secondary text-base mt-3 max-w-md mx-auto leading-relaxed">
+              Enter a song you love. We find what its listeners also play, then listen to each one
+              to keep the songs that really sound alike.
             </p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Search bar (always visible) ──────────────────── */}
-      <div className={!hasResults ? 'max-w-2xl mx-auto' : 'mb-6'}>
+      {/* ── Search ───────────────────────────────────────── */}
+      <div className={showHome ? 'max-w-2xl mx-auto' : 'mb-6'}>
         <SearchBar
           key={searchKey}
-          onSubmit={handleSubmit}
-          loading={isLoading}
+          onPick={recommendFromTrack}
+          onSubmit={recommendFromText}
+          discovery={discovery}
+          onDiscoveryChange={setDiscovery}
+          loading={stream.running}
         />
       </div>
 
       {/* ── Song not found ───────────────────────────────── */}
       <AnimatePresence>
-        {hasError && lastSearched && (
+        {notFound && lastQuery && (
           <SongNotFound
             key="not-found"
-            title={lastSearched.title}
-            artist={lastSearched.artist}
-            suggestions={lookupHook.error?.suggestions ?? []}
+            title={lastQuery.title}
+            artist={lastQuery.artist}
+            message={stream.error ?? ''}
+            suggestions={stream.suggestions}
             onDismiss={handleReset}
-            onSuggestionSelect={(t) => handleSubmit(t, lastSearched.artist)}
+            onSuggestionSelect={recommendFromTrack}
           />
         )}
       </AnimatePresence>
 
-      {/* ── Top Tracks Carousel + How It Works (idle, no error) ── */}
+      {/* ── Home: chart + how it works ───────────────────── */}
       <AnimatePresence>
-        {!hasResults && !isLoading && !hasError && (
+        {showHome && (
           <motion.div
-            key="carousel"
+            key="home"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <TopTracksCarousel onSelect={handleSubmit} />
+            <TopTracksCarousel onSelect={recommendFromTrack} />
             <HowItWorks />
           </motion.div>
         )}
@@ -129,7 +127,7 @@ export default function App() {
 
       {/* ── Results ──────────────────────────────────────── */}
       <AnimatePresence>
-        {hasResults && (
+        {started && !notFound && (
           <motion.div
             key="results"
             initial={{ opacity: 0 }}
@@ -137,49 +135,43 @@ export default function App() {
             transition={{ duration: 0.3 }}
             className="space-y-6"
           >
-            {streamHook.error && (
-              <ErrorBanner message={streamHook.error} />
-            )}
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <SongCard song={lookupHook.song!} />
+                {stream.seed
+                  ? <SeedCard track={stream.seed} />
+                  : <div className="h-full min-h-40 rounded-2xl bg-bg-surface animate-pulse" />}
               </div>
-              <div className="flex flex-col gap-4">
-                <AgentStatusPanel agents={streamHook.agents} />
-                <StreamingLinksPanel
-                  title={lookupHook.song!.track_name}
-                  artist={lookupHook.song!.artists}
-                />
-              </div>
+              <StageProgress stages={stream.stages} />
             </div>
 
-            {similarHook.recommendations && (
-              <RecommendationList
-                recommendations={similarHook.recommendations}
-                explanations={explanations}
-              />
+            {stream.error && stream.seed && <ErrorBanner message={stream.error} />}
+
+            {stream.results && <RecommendationList recommendations={stream.results} />}
+
+            {stream.running && !stream.results && (
+              <div className="flex flex-col gap-3" aria-hidden>
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="h-28 rounded-2xl bg-bg-surface animate-pulse" style={{ animationDelay: `${i * 120}ms` }} />
+                ))}
+              </div>
             )}
 
-            {streamHook.markdown && (
-              <AnalysisReport markdown={streamHook.markdown} />
-            )}
-
-            {/* Make another search */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-              className="flex justify-center py-6"
-            >
-              <button
-                onClick={handleReset}
-                className="group flex items-center gap-2.5 px-7 py-3 rounded-xl border border-[var(--color-border)] hover:border-accent text-text-secondary hover:text-accent transition-all duration-200 text-sm font-medium"
+            {!stream.running && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+                className="flex justify-center py-6"
               >
-                <span className="text-base group-hover:-rotate-180 transition-transform duration-300 inline-block">↺</span>
-                Make another search
-              </button>
-            </motion.div>
+                <button
+                  onClick={handleReset}
+                  className="group flex items-center gap-2.5 px-7 py-3 rounded-xl border border-[var(--color-border)] hover:border-accent text-text-secondary hover:text-accent transition-all duration-200 text-sm font-medium"
+                >
+                  <span className="text-base group-hover:-rotate-180 transition-transform duration-300 inline-block">↺</span>
+                  Start over
+                </button>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

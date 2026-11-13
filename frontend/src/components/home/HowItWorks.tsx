@@ -3,18 +3,18 @@ import { motion } from 'framer-motion'
 const steps = [
   {
     num: '01',
-    title: 'Search a Song',
-    desc: 'Type any track name and artist. Our system looks it up in a dataset of 114 000+ songs.',
+    title: 'Pick a Song',
+    desc: 'Type a song and artist and choose the exact track — anything on Deezer works, including new releases.',
   },
   {
     num: '02',
-    title: 'AI Extracts Features',
-    desc: 'Nine audio features — energy, danceability, tempo, valence and more — are pulled and scored.',
+    title: 'Follow the Listeners',
+    desc: 'Last.fm and ListenBrainz show what people who love that song also play, and which artists go together.',
   },
   {
     num: '03',
-    title: 'Get Recommendations',
-    desc: 'A multi-agent CrewAI pipeline finds the closest matches and explains why they fit your taste.',
+    title: 'Listen & Rank',
+    desc: 'An audio AI listens to every candidate’s preview, keeps the ones that really sound alike, and tells you why.',
   },
 ]
 
