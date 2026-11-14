@@ -76,7 +76,7 @@ function ProfileLinks() {
 /** Where the music comes from: credits for the services the results are built on. */
 export function Footer() {
   return (
-    <footer className="border-t border-[var(--color-border)]">
+    <footer className="relative border-t border-[var(--color-border)]">
       <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-10">
         <div className="flex items-center gap-2 flex-shrink-0">
           <img src="/favicon.svg" alt="" className="w-5 h-5 rounded-[4px]" />
