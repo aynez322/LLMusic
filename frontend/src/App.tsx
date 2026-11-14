@@ -11,6 +11,7 @@ import { StageProgress, StageSummary } from './components/pipeline/StageProgress
 import { useRecommendStream } from './hooks/useRecommendStream'
 import { setPreviewQueue, stopPreview } from './hooks/usePreviewPlayer'
 import { MiniPlayer } from './components/player/MiniPlayer'
+import { LoaderVinyl } from './components/aceternity/loader'
 import { useTheme } from './hooks/useTheme'
 import { TopTracksCarousel } from './components/home/TopTracksCarousel'
 import { HowItWorks } from './components/home/HowItWorks'
@@ -294,11 +295,11 @@ export default function App() {
 
             {stream.results && <RecommendationList recommendations={stream.results} />}
 
+            {/* where the results will land: a record spinning while the search runs */}
             {stream.running && !stream.results && (
-              <div className="flex flex-col gap-3" aria-hidden>
-                {[0, 1, 2].map(i => (
-                  <div key={i} className="h-28 rounded-2xl bg-bg-surface animate-pulse" style={{ animationDelay: `${i * 120}ms` }} />
-                ))}
+              <div role="status" className="flex flex-col items-center gap-4 py-12">
+                <LoaderVinyl size={88} />
+                <p className="text-text-secondary text-sm">Finding songs that sound alike…</p>
               </div>
             )}
 
