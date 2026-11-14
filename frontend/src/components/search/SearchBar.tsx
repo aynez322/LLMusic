@@ -19,6 +19,8 @@ interface SearchBarProps {
   onRerun?: () => void
   /** Shown while a search runs: stop it and go back home. */
   onCancel?: () => void
+  /** Back to the home page; shown on the results page, in Cancel's place. */
+  onHome?: () => void
 }
 
 function discoveryLabel(v: number): string {
@@ -29,7 +31,7 @@ function discoveryLabel(v: number): string {
 
 export function SearchBar({
   onPick, onSubmit, discovery, onDiscoveryChange, loading = false,
-  defaultTitle = '', defaultArtist = '', onRerun, onCancel,
+  defaultTitle = '', defaultArtist = '', onRerun, onCancel, onHome,
 }: SearchBarProps) {
   const [title, setTitle]   = useState(defaultTitle)
   const [artist, setArtist] = useState(defaultArtist)
@@ -130,9 +132,23 @@ export function SearchBar({
                 <button
                   type="button"
                   onClick={onCancel}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[var(--color-border)] hover:border-accent text-text-secondary hover:text-accent text-sm font-medium transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-bg-surface/60 backdrop-blur-sm hover:border-accent text-text-secondary hover:text-accent text-sm font-medium transition-colors"
                 >
                   Cancel
+                </button>
+              )}
+              {onHome && !onCancel && (
+                <button
+                  type="button"
+                  onClick={onHome}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-bg-surface/60 backdrop-blur-sm hover:border-accent text-text-secondary hover:text-accent text-sm font-medium transition-colors"
+                >
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M2.5 7.2 8 2.5l5.5 4.7" />
+                    <path d="M4 6v7.5h8V6" />
+                    <path d="M6.75 13.5V10h2.5v3.5" />
+                  </svg>
+                  Home
                 </button>
               )}
             </div>

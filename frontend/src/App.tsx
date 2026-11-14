@@ -228,6 +228,7 @@ export default function App() {
           defaultArtist={formDefaults.artist}
           onRerun={canRerun ? rerun : undefined}
           onCancel={stream.running ? handleCancel : undefined}
+          onHome={started && !stream.running ? handleReset : undefined}
         />
       </motion.div>
 
