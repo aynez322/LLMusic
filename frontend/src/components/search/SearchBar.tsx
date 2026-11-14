@@ -2,7 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Button } from '../ui/Button'
 import { useSearchSuggestions } from '../../hooks/useSearchSuggestions'
+import { useTypingPlaceholders, type PlaceholderExample } from '../../hooks/useTypingPlaceholders'
 import type { Track } from '../../types/music'
+
+// songs the example text types out, one after another
+const EXAMPLES: PlaceholderExample[] = [
+  { title: 'Reckoner', artist: 'Radiohead' },
+  { title: 'Holocene', artist: 'Bon Iver' },
+  { title: 'Teardrop', artist: 'Massive Attack' },
+  { title: 'Nights', artist: 'Frank Ocean' },
+  { title: 'Midnight City', artist: 'M83' },
+]
 
 interface SearchBarProps {
   /** A suggestion was picked: recommend from that exact track. */
@@ -19,6 +29,8 @@ interface SearchBarProps {
   onRerun?: () => void
   /** Shown while a search runs: stop it and go back home. */
   onCancel?: () => void
+  /** Back to the home page; shown on the results page, in Cancel's place. */
+  onHome?: () => void
 }
 
 function discoveryLabel(v: number): string {
@@ -29,7 +41,7 @@ function discoveryLabel(v: number): string {
 
 export function SearchBar({
   onPick, onSubmit, discovery, onDiscoveryChange, loading = false,
-  defaultTitle = '', defaultArtist = '', onRerun, onCancel,
+  defaultTitle = '', defaultArtist = '', onRerun, onCancel, onHome,
 }: SearchBarProps) {
   const [title, setTitle]   = useState(defaultTitle)
   const [artist, setArtist] = useState(defaultArtist)
@@ -37,6 +49,9 @@ export function SearchBar({
   const [open, setOpen]     = useState(false)
   const [active, setActive] = useState(-1)
   const containerRef = useRef<HTMLDivElement>(null)
+  const titleRef = useRef<HTMLInputElement>(null)
+  const artistRef = useRef<HTMLInputElement>(null)
+  useTypingPlaceholders(titleRef, artistRef, EXAMPLES)
 
   const query = `${title} ${artist}`.trim()
   const { items } = useSearchSuggestions(open ? query : '')
@@ -94,6 +109,7 @@ export function SearchBar({
               </label>
               <input
                 id="song-title"
+                ref={titleRef}
                 type="text"
                 value={title}
                 onChange={(e) => { setTitle(e.target.value); setOpen(true); setActive(-1) }}
@@ -111,6 +127,7 @@ export function SearchBar({
               </label>
               <input
                 id="song-artist"
+                ref={artistRef}
                 type="text"
                 value={artist}
                 onChange={(e) => { setArtist(e.target.value); setOpen(true); setActive(-1) }}
@@ -130,9 +147,23 @@ export function SearchBar({
                 <button
                   type="button"
                   onClick={onCancel}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[var(--color-border)] hover:border-accent text-text-secondary hover:text-accent text-sm font-medium transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-bg-surface/60 backdrop-blur-sm hover:border-accent text-text-secondary hover:text-accent text-sm font-medium transition-colors"
                 >
                   Cancel
+                </button>
+              )}
+              {onHome && !onCancel && (
+                <button
+                  type="button"
+                  onClick={onHome}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-bg-surface/60 backdrop-blur-sm hover:border-accent text-text-secondary hover:text-accent text-sm font-medium transition-colors"
+                >
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M2.5 7.2 8 2.5l5.5 4.7" />
+                    <path d="M4 6v7.5h8V6" />
+                    <path d="M6.75 13.5V10h2.5v3.5" />
+                  </svg>
+                  Home
                 </button>
               )}
             </div>

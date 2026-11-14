@@ -2,14 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AppShell } from './components/layout/AppShell'
 import { StickySeedBar } from './components/layout/StickySeedBar'
+import { Footer } from './components/layout/Footer'
 import { SearchBar } from './components/search/SearchBar'
 import { SongNotFound } from './components/search/SongNotFound'
 import { SeedCard } from './components/song/SeedCard'
 import { RecommendationList } from './components/recommendations/RecommendationList'
 import { StageProgress, StageSummary } from './components/pipeline/StageProgress'
 import { useRecommendStream } from './hooks/useRecommendStream'
-import { setPreviewQueue, stopPreview, usePlayer } from './hooks/usePreviewPlayer'
+import { setPreviewQueue, stopPreview } from './hooks/usePreviewPlayer'
 import { MiniPlayer } from './components/player/MiniPlayer'
+import { LoaderVinyl } from './components/aceternity/loader'
 import { useTheme } from './hooks/useTheme'
 import { TopTracksCarousel } from './components/home/TopTracksCarousel'
 import { HowItWorks } from './components/home/HowItWorks'
@@ -45,7 +47,6 @@ export default function App() {
   const [searchOutOfView, setSearchOutOfView] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
 
-  const player = usePlayer()
 
   // next/previous in the player walk the seed song, then the recommendations
   useEffect(() => {
@@ -159,9 +160,17 @@ export default function App() {
   }, [])
 
   return (
-    <AppShell themeToggle={<ThemeToggle theme={theme} onToggle={toggleTheme} />}>
+    <AppShell
+      themeToggle={<ThemeToggle theme={theme} onToggle={toggleTheme} />}
+      // the player is sticky, not fixed: it rides along at the bottom of the
+      // screen, then parks above the footer at the end of the page
+      footer={<>
+        <MiniPlayer />
+        <Footer />
+      </>}
+    >
 
-      <StickySeedBar seed={stream.seed} visible={started && searchOutOfView} onNewSearch={focusSearch} />
+      <StickySeedBar seed={stream.seed} visible={started && searchOutOfView} onNewSearch={focusSearch} onHome={handleReset} />
 
       {/* ── Hero ─────────────────────────────────────────── */}
       {/* popLayout takes the leaving hero out of the flow at once, so the
@@ -220,6 +229,7 @@ export default function App() {
           defaultArtist={formDefaults.artist}
           onRerun={canRerun ? rerun : undefined}
           onCancel={stream.running ? handleCancel : undefined}
+          onHome={started && !stream.running ? handleReset : undefined}
         />
       </motion.div>
 
@@ -285,11 +295,11 @@ export default function App() {
 
             {stream.results && <RecommendationList recommendations={stream.results} />}
 
+            {/* where the results will land: a record spinning while the search runs */}
             {stream.running && !stream.results && (
-              <div className="flex flex-col gap-3" aria-hidden>
-                {[0, 1, 2].map(i => (
-                  <div key={i} className="h-28 rounded-2xl bg-bg-surface animate-pulse" style={{ animationDelay: `${i * 120}ms` }} />
-                ))}
+              <div role="status" className="flex flex-col items-center gap-4 py-12">
+                <LoaderVinyl size={88} />
+                <p className="text-text-secondary text-sm">Finding songs that sound alike…</p>
               </div>
             )}
 
@@ -313,9 +323,6 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* room for the mini-player so it never covers the end of the page */}
-      {player.track && <div className="h-20" aria-hidden />}
-      <MiniPlayer />
 
     </AppShell>
   )

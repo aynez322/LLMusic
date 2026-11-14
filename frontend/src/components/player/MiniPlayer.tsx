@@ -112,7 +112,7 @@ export function MiniPlayer() {
           initial={{ y: '100%' }}
           animate={{ y: 0, transition: { type: 'spring', damping: 30, stiffness: 300 } }}
           exit={{ y: '100%', transition: { duration: 0.2, ease: 'easeIn' } }}
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-bg-surface/90 backdrop-blur-md"
+          className="sticky bottom-0 z-40 border-t border-[var(--color-border)] bg-bg-surface/90 backdrop-blur-md"
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <div className="relative max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-3 sm:gap-5">

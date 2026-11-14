@@ -9,11 +9,6 @@ interface RecommendationCardProps {
   onClick?: () => void
 }
 
-const cardVariant = {
-  hidden: { opacity: 0, y: 20 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as const } },
-}
-
 /* 14px line icons, drawn on a 16-unit grid to match the type weight */
 const ICON_PATHS: Record<ReasonKind, string> = {
   // two listeners
@@ -72,8 +67,8 @@ function MatchBar({ score }: { score: number }) {
 export function RecommendationCard({ rec, rank, onClick }: RecommendationCardProps) {
   const { track } = rec
   return (
-    <motion.div
-      variants={cardVariant}
+    // entrance comes from the AnimatedList around it
+    <div
       className="group relative bg-bg-surface border border-[var(--color-border)] rounded-2xl p-4 card-glow hover:border-accent/40 transition-colors"
     >
       <div className="flex items-start gap-4">
@@ -117,6 +112,6 @@ export function RecommendationCard({ rec, rank, onClick }: RecommendationCardPro
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

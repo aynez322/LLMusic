@@ -25,3 +25,6 @@ dist/
 ./claude
 # HTTP + embedding cache
 .cache/
+
+# Videos
+*.mp4

@@ -63,6 +63,10 @@ function TrackCard({ track, index, onClick }: {
 }
 
 /* ── skeleton ─────────────────────────────────────────────────── */
+function edgeMask(left: boolean, right: boolean): string {
+  return `linear-gradient(to right, transparent 0, #000 ${left ? 32 : 0}px, #000 calc(100% - ${right ? 48 : 0}px), transparent 100%)`
+}
+
 function Skeleton() {
   return (
     <div className="mt-10">
@@ -147,23 +151,6 @@ export function TopTracksCarousel({ onSelect }: TopTracksCarouselProps) {
 
       {/* scroll area: bleeds to the screen edges on phones (cancels main's px-4) */}
       <div className="relative -mx-4 sm:mx-0">
-        {/* left edge fade */}
-        <div
-          className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 z-10 transition-opacity duration-300"
-          style={{
-            background: 'linear-gradient(to right, var(--color-bg-base), transparent)',
-            opacity: canPrev ? 1 : 0,
-          }}
-        />
-        {/* right edge fade */}
-        <div
-          className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 z-10 transition-opacity duration-300"
-          style={{
-            background: 'linear-gradient(to left, var(--color-bg-base), transparent)',
-            opacity: canNext ? 1 : 0,
-          }}
-        />
-
         {/* nav buttons */}
         <AnimatePresence>
           {canPrev && <NavBtn dir="left"  onClick={() => scroll('left')}  key="prev" />}
@@ -176,8 +163,15 @@ export function TopTracksCarousel({ onSelect }: TopTracksCarouselProps) {
         <div
           ref={scrollRef}
           onScroll={updateEdges}
-          className="flex gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory px-4 scroll-px-4 sm:px-0 sm:scroll-px-0 pt-2 pb-3"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          className="flex gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory px-4 scroll-px-4 sm:px-0 sm:scroll-px-0 pt-4 pb-6 -mt-2 -mb-3"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            // fade the cards themselves at a scrollable edge, so it works over
+            // the background video (a page-coloured overlay would show as a block)
+            maskImage: edgeMask(canPrev, canNext),
+            WebkitMaskImage: edgeMask(canPrev, canNext),
+          }}
         >
           {tracks.map((track, i) => (
             <TrackCard
