@@ -2,7 +2,7 @@
 
 > Type a song. LLMusic finds what people who love it also play, listens to every candidate, and tells you why each one fits.
 
-**[Try it live →](https://huggingface.co/spaces/aynez/llmusic)**
+**[Try it live →](https://aynez-llmusic.hf.space/)**
 
 ![Demo: typing "Holocene" by Bon Iver and getting ten recommendations with reasons](docs/demo.gif)
 
