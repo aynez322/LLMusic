@@ -3,9 +3,10 @@ import { type ReactNode } from 'react'
 interface AppShellProps {
   children: ReactNode
   themeToggle?: ReactNode
+  footer?: ReactNode
 }
 
-export function AppShell({ children, themeToggle }: AppShellProps) {
+export function AppShell({ children, themeToggle, footer }: AppShellProps) {
   return (
     <div className="relative min-h-screen bg-bg-base flex flex-col transition-colors duration-[250ms]">
       {themeToggle && (
@@ -17,6 +18,7 @@ export function AppShell({ children, themeToggle }: AppShellProps) {
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-10">
         {children}
       </main>
+      {footer}
     </div>
   )
 }
