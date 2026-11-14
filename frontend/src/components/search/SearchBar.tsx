@@ -2,7 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Button } from '../ui/Button'
 import { useSearchSuggestions } from '../../hooks/useSearchSuggestions'
+import { useTypingPlaceholders, type PlaceholderExample } from '../../hooks/useTypingPlaceholders'
 import type { Track } from '../../types/music'
+
+// songs the example text types out, one after another
+const EXAMPLES: PlaceholderExample[] = [
+  { title: 'Reckoner', artist: 'Radiohead' },
+  { title: 'Holocene', artist: 'Bon Iver' },
+  { title: 'Teardrop', artist: 'Massive Attack' },
+  { title: 'Nights', artist: 'Frank Ocean' },
+  { title: 'Midnight City', artist: 'M83' },
+]
 
 interface SearchBarProps {
   /** A suggestion was picked: recommend from that exact track. */
@@ -39,6 +49,9 @@ export function SearchBar({
   const [open, setOpen]     = useState(false)
   const [active, setActive] = useState(-1)
   const containerRef = useRef<HTMLDivElement>(null)
+  const titleRef = useRef<HTMLInputElement>(null)
+  const artistRef = useRef<HTMLInputElement>(null)
+  useTypingPlaceholders(titleRef, artistRef, EXAMPLES)
 
   const query = `${title} ${artist}`.trim()
   const { items } = useSearchSuggestions(open ? query : '')
@@ -96,6 +109,7 @@ export function SearchBar({
               </label>
               <input
                 id="song-title"
+                ref={titleRef}
                 type="text"
                 value={title}
                 onChange={(e) => { setTitle(e.target.value); setOpen(true); setActive(-1) }}
@@ -113,6 +127,7 @@ export function SearchBar({
               </label>
               <input
                 id="song-artist"
+                ref={artistRef}
                 type="text"
                 value={artist}
                 onChange={(e) => { setArtist(e.target.value); setOpen(true); setActive(-1) }}
