@@ -169,7 +169,7 @@ export default function App() {
       </>}
     >
 
-      <StickySeedBar seed={stream.seed} visible={started && searchOutOfView} onNewSearch={focusSearch} />
+      <StickySeedBar seed={stream.seed} visible={started && searchOutOfView} onNewSearch={focusSearch} onHome={handleReset} />
 
       {/* ── Hero ─────────────────────────────────────────── */}
       {/* popLayout takes the leaving hero out of the flow at once, so the

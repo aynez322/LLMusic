@@ -6,11 +6,12 @@ interface StickySeedBarProps {
   /** Show only while the full search form is scrolled out of view. */
   visible: boolean
   onNewSearch: () => void
+  onHome: () => void
 }
 
 /** Slim bar pinned to the top on the results page: which song the list is for,
  *  and a way back to the search without scrolling all the way up. */
-export function StickySeedBar({ seed, visible, onNewSearch }: StickySeedBarProps) {
+export function StickySeedBar({ seed, visible, onNewSearch, onHome }: StickySeedBarProps) {
   return (
     <AnimatePresence>
       {seed && visible && (
@@ -44,6 +45,21 @@ export function StickySeedBar({ seed, visible, onNewSearch }: StickySeedBarProps
                 <path d="M10.5 10.5 14 14" />
               </svg>
               New search
+            </button>
+            <button
+              type="button"
+              onClick={onHome}
+              aria-label="Home"
+              title="Home"
+              className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--color-border)] hover:border-accent text-text-secondary hover:text-accent text-sm transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M2.5 7.2 8 2.5l5.5 4.7" />
+                <path d="M4 6v7.5h8V6" />
+                <path d="M6.75 13.5V10h2.5v3.5" />
+              </svg>
+              {/* phones: icon only, so the song title keeps its room */}
+              <span className="hidden sm:inline">Home</span>
             </button>
           </div>
         </motion.div>
