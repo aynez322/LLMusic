@@ -58,6 +58,22 @@ pinned: false
     $readme = Get-Content README.md -Raw -Encoding UTF8
     [IO.File]::WriteAllText((Join-Path (Get-Location) 'README.md'), $header + $readme, (New-Object Text.UTF8Encoding $false))
     git add README.md
+
+    # HF rejects binary files pushed as plain git objects (any size): they must
+    # go through LFS/Xet. Videos are plain blobs on GitHub (no LFS quota there),
+    # so they are switched to LFS here, in the deploy commit only.
+    $lfsRules = @('*.mp4', '*.webm', '*.jpg', '*.jpeg', '*.webp')
+    $attrs = if (Test-Path .gitattributes) { Get-Content .gitattributes } else { @() }
+    $missing = $lfsRules | Where-Object { $rule = $_; -not ($attrs | Where-Object { $_ -like "$rule *filter=lfs*" }) }
+    if ($missing) {
+        $lines = $missing | ForEach-Object { "$_ filter=lfs diff=lfs merge=lfs -text" }
+        [IO.File]::AppendAllText((Join-Path (Get-Location) '.gitattributes'), (($lines -join "`n") + "`n"), (New-Object Text.UTF8Encoding $false))
+        git add .gitattributes
+        # re-add the already-tracked files so the new LFS rules apply to them
+        git add --renormalize .
+        if ($LASTEXITCODE -ne 0) { throw 'git add --renormalize failed - is git-lfs installed?' }
+    }
+
     git commit -q -m "Deploy LLMusic ($(Get-Date -Format 'yyyy-MM-dd HH:mm'))" | Out-Null
 
     Write-Host 'Pushing to Hugging Face (hf -> main)...' -ForegroundColor Cyan
