@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatedList } from '@/components/magicui/animated-list'
+import { prefersReducedMotion } from '../../lib/media'
 import type { Recommendation } from '../../types/music'
 import { RecommendationCard } from './RecommendationCard'
 import { TrackDetailModal } from './TrackDetailModal'
 
-const containerVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08 } },
-}
+// ms between cards: ten cards land in about a second and a half
+const REVEAL_DELAY = 150
 
 export function RecommendationList({ recommendations }: { recommendations: Recommendation[] }) {
   const [selected, setSelected] = useState<number | null>(null)
@@ -19,7 +18,12 @@ export function RecommendationList({ recommendations }: { recommendations: Recom
         <h2 className="font-display text-text-primary text-xl">You might also like</h2>
         <p className="text-text-muted text-xs">Play a cover to hear a 30s preview</p>
       </div>
-      <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-3">
+      {/* Magic UI's animated list, growing downward so #1 stays on top */}
+      <AnimatedList
+        newestOnTop={false}
+        delay={prefersReducedMotion() ? 0 : REVEAL_DELAY}
+        className="gap-3"
+      >
         {recommendations.map((rec, i) => (
           <RecommendationCard
             key={rec.track.deezer_id}
@@ -28,7 +32,7 @@ export function RecommendationList({ recommendations }: { recommendations: Recom
             onClick={() => { setOrigin(i); setSelected(i) }}
           />
         ))}
-      </motion.div>
+      </AnimatedList>
 
       <TrackDetailModal
         recs={recommendations}
